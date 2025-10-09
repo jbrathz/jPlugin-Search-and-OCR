@@ -1,0 +1,522 @@
+# Thai translation for PDF Search Plugin
+# Copyright (C) 2025
+msgid ""
+msgstr ""
+"Project-Id-Version: PDF Search 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-08 12:00+0000\n"
+"PO-Revision-Date: 2025-01-08 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Thai\n"
+"Language: th_TH\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+# Admin Menu
+msgid "PDF Search"
+msgstr "ค้นหา PDF"
+
+msgid "Dashboard"
+msgstr "แดชบอร์ด"
+
+msgid "Manual OCR"
+msgstr "OCR ด้วยตนเอง"
+
+msgid "Manage Folders"
+msgstr "จัดการโฟลเดอร์"
+
+msgid "Settings"
+msgstr "ตั้งค่า"
+
+# Dashboard
+msgid "PDF Search Dashboard"
+msgstr "แดชบอร์ด ค้นหา PDF"
+
+msgid "Total PDFs"
+msgstr "จำนวน PDF ทั้งหมด"
+
+msgid "Linked to Posts"
+msgstr "เชื่อมโยงกับโพสต์"
+
+msgid "Unlinked"
+msgstr "ยังไม่เชื่อมโยง"
+
+msgid "Last Updated"
+msgstr "อัปเดตล่าสุด"
+
+msgid "All Folders"
+msgstr "ทุกโฟลเดอร์"
+
+msgid "Search PDFs..."
+msgstr "ค้นหา PDF..."
+
+msgid "Search"
+msgstr "ค้นหา"
+
+msgid "Clear"
+msgstr "ล้าง"
+
+msgid "ID"
+msgstr "ไอดี"
+
+msgid "PDF Title"
+msgstr "ชื่อ PDF"
+
+msgid "Folder"
+msgstr "โฟลเดอร์"
+
+msgid "Post Title"
+msgstr "ชื่อโพสต์"
+
+msgid "OCR Method"
+msgstr "วิธี OCR"
+
+msgid "Characters"
+msgstr "จำนวนตัวอักษร"
+
+msgid "Actions"
+msgstr "การดำเนินการ"
+
+msgid "View"
+msgstr "ดู"
+
+msgid "Delete"
+msgstr "ลบ"
+
+msgid "No PDFs found."
+msgstr "ไม่พบ PDF"
+
+msgid "Run OCR"
+msgstr "เริ่ม OCR"
+
+msgid "No post linked"
+msgstr "ยังไม่เชื่อมโยงกับโพสต์"
+
+msgid "Edit Post"
+msgstr "แก้ไขโพสต์"
+
+msgid "Are you sure you want to delete"
+msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบ"
+
+msgid "PDF deleted successfully."
+msgstr "ลบ PDF สำเร็จแล้ว"
+
+msgid "%s items"
+msgstr "%s รายการ"
+
+# Manual OCR
+msgid "Manually trigger OCR processing for individual files or entire folders."
+msgstr "เริ่มกระบวนการ OCR ด้วยตนเองสำหรับไฟล์เดี่ยวหรือทั้งโฟลเดอร์"
+
+msgid "Single File"
+msgstr "ไฟล์เดี่ยว"
+
+msgid "Entire Folder"
+msgstr "ทั้งโฟลเดอร์"
+
+msgid "Incremental (New Only)"
+msgstr "เพิ่มเติม (เฉพาะไฟล์ใหม่)"
+
+msgid "Select Folder"
+msgstr "เลือกโฟลเดอร์"
+
+msgid "-- Select Folder --"
+msgstr "-- เลือกโฟลเดอร์ --"
+
+msgid "Optional: Select folder to categorize this PDF"
+msgstr "ไม่บังคับ: เลือกโฟลเดอร์เพื่อจัดหมวดหมู่ PDF นี้"
+
+msgid "Google Drive File ID"
+msgstr "ไอดีไฟล์ Google Drive"
+
+msgid "Example: 1abc123xyz456 (from drive.google.com/file/d/1abc123xyz456)"
+msgstr "ตัวอย่าง: 1abc123xyz456 (จาก drive.google.com/file/d/1abc123xyz456)"
+
+msgid "Run OCR on File"
+msgstr "เริ่ม OCR ไฟล์"
+
+msgid "Select the folder to OCR"
+msgstr "เลือกโฟลเดอร์ที่ต้องการ OCR"
+
+msgid "Warning:"
+msgstr "คำเตือน:"
+
+msgid "This will process ALL PDF files in the folder. This may take a long time depending on the number of files."
+msgstr "จะประมวลผลไฟล์ PDF ทั้งหมดในโฟลเดอร์ อาจใช้เวลานานขึ้นอยู่กับจำนวนไฟล์"
+
+msgid "Run OCR on Folder"
+msgstr "เริ่ม OCR โฟลเดอร์"
+
+msgid "Select the folder to scan for new PDFs"
+msgstr "เลือกโฟลเดอร์เพื่อสแกนหาไฟล์ PDF ใหม่"
+
+msgid "Info:"
+msgstr "ข้อมูล:"
+
+msgid "This will only process NEW files that are not already in the database. Already processed files will be skipped."
+msgstr "จะประมวลผลเฉพาะไฟล์ใหม่ที่ยังไม่อยู่ในฐานข้อมูล ไฟล์ที่ประมวลผลแล้วจะถูกข้าม"
+
+msgid "Run Incremental OCR"
+msgstr "เริ่ม OCR แบบเพิ่มเติม"
+
+msgid "Current Status"
+msgstr "สถานะปัจจุบัน"
+
+msgid "Total PDFs in Database"
+msgstr "จำนวน PDF ในฐานข้อมูล"
+
+msgid "PDFs with Posts"
+msgstr "PDF ที่เชื่อมโยงกับโพสต์"
+
+msgid "PDFs without Posts"
+msgstr "PDF ที่ยังไม่เชื่อมโยงกับโพสต์"
+
+msgid "How to Use"
+msgstr "วิธีการใช้งาน"
+
+msgid "Use when you want to OCR one specific PDF. Get the file ID from the Google Drive URL."
+msgstr "ใช้เมื่อต้องการ OCR ไฟล์ PDF เฉพาะไฟล์ ดึงไอดีไฟล์จาก URL ของ Google Drive"
+
+msgid "Use for initial setup or when you want to reprocess all PDFs in a folder."
+msgstr "ใช้สำหรับการตั้งค่าครั้งแรกหรือเมื่อต้องการประมวลผล PDF ทั้งหมดในโฟลเดอร์ใหม่"
+
+msgid "Use regularly to process only new PDFs that were added since last run."
+msgstr "ใช้เป็นประจำเพื่อประมวลผลเฉพาะ PDF ใหม่ที่เพิ่มเข้ามาหลังจากรันครั้งล่าสุด"
+
+msgid "Tips"
+msgstr "เคล็ดลับ"
+
+msgid "Make sure your Python OCR API is running at the configured URL"
+msgstr "ตรวจสอบให้แน่ใจว่า Python OCR API กำลังทำงานที่ URL ที่ตั้งค่าไว้"
+
+msgid "Test the connection in Settings → API → Test Connection"
+msgstr "ทดสอบการเชื่อมต่อที่ ตั้งค่า → API → ทดสอบการเชื่อมต่อ"
+
+msgid "For large folders, consider using Incremental mode to avoid timeouts"
+msgstr "สำหรับโฟลเดอร์ขนาดใหญ่ แนะนำให้ใช้โหมดเพิ่มเติมเพื่อหลีกเลี่ยง timeout"
+
+msgid "Enable Auto-OCR in Settings → Automation to automatically process PDFs when saving posts"
+msgstr "เปิดใช้งาน Auto-OCR ที่ ตั้งค่า → อัตโนมัติ เพื่อประมวลผล PDF อัตโนมัติเมื่อบันทึกโพสต์"
+
+msgid "Please enter a file ID."
+msgstr "กรุณากรอกไอดีไฟล์"
+
+msgid "Please select a folder."
+msgstr "กรุณาเลือกโฟลเดอร์"
+
+msgid "OCR failed:"
+msgstr "OCR ล้มเหลว:"
+
+msgid "OCR completed successfully!"
+msgstr "OCR เสร็จสมบูรณ์แล้ว!"
+
+msgid "Result:"
+msgstr "ผลลัพธ์:"
+
+msgid "File:"
+msgstr "ไฟล์:"
+
+msgid "Method:"
+msgstr "วิธีการ:"
+
+msgid "OCR completed but failed to save to database."
+msgstr "OCR เสร็จแล้วแต่บันทึกลงฐานข้อมูลไม่สำเร็จ"
+
+msgid "Processing folder... This may take several minutes."
+msgstr "กำลังประมวลผลโฟลเดอร์... อาจใช้เวลาหลายนาที"
+
+msgid "Folder OCR completed! Success: %d, Errors: %d"
+msgstr "OCR โฟลเดอร์เสร็จสมบูรณ์! สำเร็จ: %d, ผิดพลาด: %d"
+
+msgid "Processing new files only..."
+msgstr "กำลังประมวลผลเฉพาะไฟล์ใหม่..."
+
+msgid "Incremental OCR completed! New: %d, Skipped: %d, Errors: %d"
+msgstr "OCR แบบเพิ่มเติมเสร็จสมบูรณ์! ใหม่: %d, ข้าม: %d, ผิดพลาด: %d"
+
+msgid "Processing..."
+msgstr "กำลังประมวลผล..."
+
+# Manage Folders
+msgid "Manage Google Drive Folders"
+msgstr "จัดการโฟลเดอร์ Google Drive"
+
+msgid "Add New Folder"
+msgstr "เพิ่มโฟลเดอร์ใหม่"
+
+msgid "Edit Folder"
+msgstr "แก้ไขโฟลเดอร์"
+
+msgid "Folder Name"
+msgstr "ชื่อโฟลเดอร์"
+
+msgid "Display name for this folder (e.g., \"บทความวัคซีน\")"
+msgstr "ชื่อแสดงสำหรับโฟลเดอร์นี้ (เช่น \"บทความวัคซีน\")"
+
+msgid "Google Drive Folder ID"
+msgstr "ไอดีโฟลเดอร์ Google Drive"
+
+msgid "Get from URL: drive.google.com/drive/folders/<strong>FOLDER_ID</strong>"
+msgstr "ดึงจาก URL: drive.google.com/drive/folders/<strong>FOLDER_ID</strong>"
+
+msgid "Set as Default"
+msgstr "ตั้งเป็นค่าเริ่มต้น"
+
+msgid "Use this folder as default for manual OCR"
+msgstr "ใช้โฟลเดอร์นี้เป็นค่าเริ่มต้นสำหรับ OCR ด้วยตนเอง"
+
+msgid "Add Folder"
+msgstr "เพิ่มโฟลเดอร์"
+
+msgid "Update Folder"
+msgstr "อัปเดตโฟลเดอร์"
+
+msgid "Cancel"
+msgstr "ยกเลิก"
+
+msgid "Existing Folders"
+msgstr "โฟลเดอร์ที่มีอยู่"
+
+msgid "No folders added yet. Add your first Google Drive folder above."
+msgstr "ยังไม่มีโฟลเดอร์ เพิ่มโฟลเดอร์ Google Drive แรกของคุณด้านบน"
+
+msgid "PDFs"
+msgstr "PDF"
+
+msgid "Default"
+msgstr "ค่าเริ่มต้น"
+
+msgid "Edit"
+msgstr "แก้ไข"
+
+msgid "Open in Drive"
+msgstr "เปิดใน Drive"
+
+msgid "Please fill in all required fields."
+msgstr "กรุณากรอกข้อมูลที่จำเป็นทั้งหมด"
+
+msgid "This Folder ID already exists."
+msgstr "ไอดีโฟลเดอร์นี้มีอยู่แล้ว"
+
+msgid "Folder added successfully!"
+msgstr "เพิ่มโฟลเดอร์สำเร็จแล้ว!"
+
+msgid "Failed to add folder."
+msgstr "เพิ่มโฟลเดอร์ไม่สำเร็จ"
+
+msgid "Folder updated successfully!"
+msgstr "อัปเดตโฟลเดอร์สำเร็จแล้ว!"
+
+msgid "Failed to update folder."
+msgstr "อัปเดตโฟลเดอร์ไม่สำเร็จ"
+
+msgid "Folder deleted successfully!"
+msgstr "ลบโฟลเดอร์สำเร็จแล้ว!"
+
+msgid "Failed to delete folder."
+msgstr "ลบโฟลเดอร์ไม่สำเร็จ"
+
+msgid "Are you sure you want to delete folder"
+msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบโฟลเดอร์"
+
+msgid "Note: PDFs from this folder will NOT be deleted, only the folder reference."
+msgstr "หมายเหตุ: PDF จากโฟลเดอร์นี้จะไม่ถูกลบ จะลบเฉพาะการอ้างอิงโฟลเดอร์เท่านั้น"
+
+# Settings
+msgid "PDF Search Settings"
+msgstr "ตั้งค่าค้นหา PDF"
+
+msgid "API"
+msgstr "API"
+
+msgid "Google Drive"
+msgstr "Google Drive"
+
+msgid "Display"
+msgstr "การแสดงผล"
+
+msgid "Automation"
+msgstr "อัตโนมัติ"
+
+msgid "Advanced"
+msgstr "ขั้นสูง"
+
+msgid "Import/Export"
+msgstr "นำเข้า/ส่งออก"
+
+msgid "Save Settings"
+msgstr "บันทึกการตั้งค่า"
+
+msgid "Settings saved successfully."
+msgstr "บันทึกการตั้งค่าสำเร็จแล้ว"
+
+msgid "API URL"
+msgstr "URL ของ API"
+
+msgid "Python OCR API endpoint (e.g., http://localhost:8000)"
+msgstr "ปลายทาง Python OCR API (เช่น http://localhost:8000)"
+
+msgid "API Key"
+msgstr "API Key"
+
+msgid "API authentication key"
+msgstr "คีย์สำหรับยืนยันตัวตน API"
+
+msgid "Timeout (seconds)"
+msgstr "หมดเวลา (วินาที)"
+
+msgid "Request timeout in seconds"
+msgstr "เวลาหมดเวลาของคำขอในหน่วยวินาที"
+
+msgid "Test Connection"
+msgstr "ทดสอบการเชื่อมต่อ"
+
+msgid "Connection successful!"
+msgstr "เชื่อมต่อสำเร็จ!"
+
+msgid "Connection failed:"
+msgstr "เชื่อมต่อไม่สำเร็จ:"
+
+msgid "OCR Language"
+msgstr "ภาษา OCR"
+
+msgid "Tesseract language codes (e.g., tha+eng)"
+msgstr "รหัสภาษา Tesseract (เช่น tha+eng สำหรับไทย+อังกฤษ)"
+
+msgid "Note:"
+msgstr "หมายเหตุ:"
+
+msgid "Google Drive folders are now managed in the"
+msgstr "โฟลเดอร์ Google Drive จัดการได้ที่"
+
+msgid "page."
+msgstr "แล้ว"
+
+msgid "Results Per Page"
+msgstr "จำนวนผลลัพธ์ต่อหน้า"
+
+msgid "Popular Keywords"
+msgstr "คำค้นยอดนิยม"
+
+msgid "Comma-separated list (e.g., วัคซีน, โภชนาการ, พัฒนาการ)"
+msgstr "รายการคั่นด้วยจุลภาค (เช่น วัคซีน, โภชนาการ, พัฒนาการ)"
+
+msgid "Enable Autocomplete"
+msgstr "เปิดใช้งานการเติมอัตโนมัติ"
+
+msgid "Cache Duration (seconds)"
+msgstr "ระยะเวลาแคช (วินาที)"
+
+msgid "0 to disable caching"
+msgstr "0 เพื่อปิดการใช้งานแคช"
+
+msgid "Show Thumbnails"
+msgstr "แสดงภาพขนาดย่อ"
+
+msgid "Thumbnail Size"
+msgstr "ขนาดภาพขนาดย่อ"
+
+msgid "Snippet Length"
+msgstr "ความยาวตัวอย่างข้อความ"
+
+msgid "Number of characters to show in preview"
+msgstr "จำนวนตัวอักษรที่จะแสดงในตัวอย่าง"
+
+msgid "Highlight Color"
+msgstr "สีไฮไลท์"
+
+msgid "Date Format"
+msgstr "รูปแบบวันที่"
+
+msgid "PHP date format (e.g., Y-m-d H:i:s)"
+msgstr "รูปแบบวันที่ PHP (เช่น Y-m-d H:i:s)"
+
+msgid "Auto-OCR on Save"
+msgstr "OCR อัตโนมัติเมื่อบันทึก"
+
+msgid "Automatically OCR PDFs when saving posts"
+msgstr "ประมวลผล OCR อัตโนมัติเมื่อบันทึกโพสต์"
+
+msgid "Detect Google Drive URLs"
+msgstr "ตรวจจับ URL ของ Google Drive"
+
+msgid "Detect PDF Attachments"
+msgstr "ตรวจจับไฟล์ PDF ที่แนบมา"
+
+msgid "Async Processing"
+msgstr "ประมวลผลแบบอะซิงโครนัส"
+
+msgid "Process OCR requests asynchronously"
+msgstr "ประมวลผลคำขอ OCR แบบอะซิงโครนัส"
+
+msgid "Debug Mode"
+msgstr "โหมดดีบัก"
+
+msgid "Enable detailed error logging"
+msgstr "เปิดใช้งานการบันทึกข้อผิดพลาดแบบละเอียด"
+
+msgid "Public API Access"
+msgstr "การเข้าถึง API สาธารณะ"
+
+msgid "Allow non-logged-in users to use REST API"
+msgstr "อนุญาตให้ผู้ใช้ที่ไม่ได้เข้าสู่ระบบใช้ REST API"
+
+msgid "Rate Limit (requests/minute)"
+msgstr "จำกัดอัตรา (คำขอ/นาที)"
+
+msgid "0 to disable"
+msgstr "0 เพื่อปิดการใช้งาน"
+
+msgid "Log Retention (days)"
+msgstr "เก็บบันทึก (วัน)"
+
+msgid "Export Settings"
+msgstr "ส่งออกการตั้งค่า"
+
+msgid "Download your settings as a JSON file for backup or migration."
+msgstr "ดาวน์โหลดการตั้งค่าเป็นไฟล์ JSON เพื่อสำรองหรือย้ายข้อมูล"
+
+msgid "Import Settings"
+msgstr "นำเข้าการตั้งค่า"
+
+msgid "Upload a previously exported JSON file to restore settings."
+msgstr "อัปโหลดไฟล์ JSON ที่ส่งออกก่อนหน้านี้เพื่อกู้คืนการตั้งค่า"
+
+msgid "Settings imported successfully."
+msgstr "นำเข้าการตั้งค่าสำเร็จแล้ว"
+
+msgid "Failed to import settings. Invalid JSON."
+msgstr "นำเข้าการตั้งค่าไม่สำเร็จ JSON ไม่ถูกต้อง"
+
+msgid "Reset Settings"
+msgstr "รีเซ็ตการตั้งค่า"
+
+msgid "Warning: This will reset all settings to default values."
+msgstr "คำเตือน: การดำเนินการนี้จะรีเซ็ตการตั้งค่าทั้งหมดเป็นค่าเริ่มต้น"
+
+msgid "Reset to Default"
+msgstr "รีเซ็ตเป็นค่าเริ่มต้น"
+
+msgid "Are you sure you want to reset all settings?"
+msgstr "คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ตการตั้งค่าทั้งหมด?"
+
+# Frontend
+msgid "Search in PDF documents..."
+msgstr "ค้นหาในเอกสาร PDF..."
+
+msgid "Popular:"
+msgstr "ยอดนิยม:"
+
+msgid "Searching..."
+msgstr "กำลังค้นหา..."
+
+msgid "No results found."
+msgstr "ไม่พบผลลัพธ์"
+
+msgid "An error occurred. Please try again."
+msgstr "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง"
+
+msgid "Relevance Score"
+msgstr "คะแนนความเกี่ยวข้อง"

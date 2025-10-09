@@ -1,0 +1,812 @@
+/**
+ * jSearch - Admin Styles
+ */
+
+/* General */
+.jsearch-settings,
+.jsearch-dashboard,
+.jsearch-ocr {
+    margin-top: 20px;
+}
+
+/* Settings Page */
+.jsearch-settings .nav-tab-wrapper {
+    margin-bottom: 20px;
+}
+
+.jsearch-settings-content {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 20px;
+}
+
+.jsearch-settings .form-table th {
+    width: 220px;
+    font-weight: 600;
+}
+
+.jsearch-settings .description {
+    color: #646970;
+    font-size: 13px;
+}
+
+/* Dashboard Stats */
+.jsearch-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.stat-box {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    transition: all 0.2s ease;
+}
+
+.stat-box:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    transform: translateY(-2px);
+}
+
+.stat-box h3 {
+    margin: 0 0 8px 0;
+    font-size: 36px;
+    font-weight: 700;
+    color: #2271b1;
+    line-height: 1;
+}
+
+.stat-box p {
+    margin: 0;
+    color: #646970;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Dashboard Table */
+.jsearch-table {
+    margin-top: 20px;
+}
+
+.jsearch-table td {
+    vertical-align: middle;
+}
+
+.jsearch-table .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-pymupdf {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.badge-tesseract {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.jsearch-table .button-small {
+    padding: 2px 8px;
+    font-size: 12px;
+    height: auto;
+    line-height: 1.5;
+}
+
+/* Search Box */
+.jsearch-dashboard .search-box {
+    float: right;
+    margin: 10px 0 20px 0;
+}
+
+.jsearch-dashboard .search-box input[type="search"] {
+    width: 300px;
+    margin-right: 5px;
+}
+
+/* Manual OCR */
+.jsearch-ocr {
+    /* Full width like other admin pages */
+}
+
+.jsearch-form {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 24px;
+    margin-top: 20px;
+    border-radius: 4px;
+}
+
+.ocr-tab-content {
+    margin-top: 20px;
+}
+
+.jsearch-help {
+    background: #f0f6fc;
+    border: 1px solid #b6d7ff;
+    padding: 24px;
+    margin-top: 30px;
+    border-radius: 4px;
+}
+
+.jsearch-help h2,
+.jsearch-help h3 {
+    margin-top: 0;
+    color: #0c5460;
+}
+
+.jsearch-help ul,
+.jsearch-help ol {
+    margin-left: 24px;
+}
+
+.jsearch-help li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+/* Notices */
+.notice.inline {
+    margin: 20px 0;
+    padding: 12px 16px;
+}
+
+.jsearch-settings-content .notice.inline:first-of-type {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.jsearch-settings-content .notice.inline:last-of-type {
+    margin-top: 20px;
+    margin-bottom: 0;
+}
+
+/* Color Picker */
+.wp-picker-container {
+    z-index: 10;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .jsearch-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-box h3 {
+        font-size: 28px;
+    }
+
+    .jsearch-dashboard .search-box {
+        float: none;
+        margin: 20px 0;
+    }
+
+    .jsearch-dashboard .search-box input[type="search"] {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .jsearch-table {
+        font-size: 13px;
+    }
+
+    .jsearch-table .button-small {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
+
+/* Loading States */
+.jsearch-form input[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Form Validation */
+.form-table input:invalid {
+    border-color: #d63638;
+}
+
+.form-table input:valid {
+    border-color: #8c8f94;
+}
+
+/* Success/Error Messages */
+.notice.notice-success {
+    border-left-color: #00a32a;
+}
+
+.notice.notice-error {
+    border-left-color: #d63638;
+}
+
+.notice.notice-warning {
+    border-left-color: #dba617;
+}
+
+.notice.notice-info {
+    border-left-color: #2271b1;
+}
+
+/* Tabs */
+.nav-tab {
+    transition: all 0.2s ease;
+}
+
+.nav-tab:hover {
+    background-color: #f0f0f1;
+}
+
+.nav-tab-active {
+    background-color: #fff;
+    border-bottom-color: #fff;
+}
+
+/* Tables */
+.widefat {
+    border-collapse: collapse;
+}
+
+.widefat td,
+.widefat th {
+    padding: 12px 10px;
+}
+
+.widefat tbody tr:hover {
+    background-color: #f6f7f7;
+}
+
+/* Buttons */
+.button.button-primary {
+    background: #2271b1;
+    border-color: #2271b1;
+    transition: all 0.2s ease;
+}
+
+.button.button-primary:hover {
+    background: #135e96;
+    border-color: #135e96;
+}
+
+.button.button-secondary {
+    transition: all 0.2s ease;
+}
+
+.button.button-secondary:hover {
+    background: #f6f7f7;
+}
+
+/* ==========================================================================
+   OCR Loading Overlay
+   ========================================================================== */
+
+.jsearch-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.jsearch-loading-content {
+    background: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.jsearch-loading-content .spinner {
+    float: none;
+    margin: 0 auto 20px;
+}
+
+.jsearch-loading-content h2 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    color: #2271b1;
+    font-weight: 600;
+}
+
+.jsearch-loading-content p {
+    margin: 0 0 30px;
+    color: #646970;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.jsearch-loading-content .notice-text {
+    margin: 20px 0 0;
+    font-size: 13px;
+    color: #d63638;
+    font-weight: 600;
+}
+
+/* Progress Steps */
+.progress-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+}
+
+.progress-steps .step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #f6f7f7;
+    border-radius: 6px;
+    color: #8c8f94;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.progress-steps .step .dashicons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.progress-steps .step.active {
+    background: #e5f5ff;
+    color: #2271b1;
+    font-weight: 600;
+    border-color: #2271b1;
+}
+
+.progress-steps .step.active .dashicons {
+    color: #2271b1;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Responsive for Loading Overlay */
+@media screen and (max-width: 600px) {
+    .jsearch-loading-content {
+        padding: 30px 20px;
+        max-width: 90%;
+        margin: 0 20px;
+    }
+
+    .jsearch-loading-content h2 {
+        font-size: 20px;
+    }
+
+    .progress-steps .step {
+        padding: 12px;
+        font-size: 13px;
+    }
+}
+
+/* ==========================================================================
+   Dashboard Specific Styles
+   ========================================================================== */
+
+/* Dashboard Stats */
+.jsearch-stats {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Dashboard Filters */
+.jsearch-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    gap: 15px;
+}
+
+.filter-group {
+    flex: 0 0 auto;
+}
+
+.filter-group select {
+    min-width: 200px;
+}
+
+/* Folder Badge */
+.folder-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #e0f2fe;
+    border: 1px solid #7dd3fc;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #0369a1;
+}
+
+/* Responsive Dashboard */
+@media screen and (max-width: 1024px) {
+    .jsearch-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (max-width: 782px) {
+    .jsearch-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .jsearch-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group select,
+    .search-box input[type="search"] {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* ==========================================================================
+   Usage Tab Styles
+   ========================================================================== */
+
+.usage-section {
+    margin: 30px 0;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.usage-section h3 {
+    margin-top: 0;
+    color: #2271b1;
+    border-bottom: 2px solid #2271b1;
+    padding-bottom: 10px;
+}
+
+.usage-box {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border-left: 4px solid #2271b1;
+}
+
+.usage-box h4 {
+    margin-top: 0;
+    color: #333;
+}
+
+.usage-code {
+    background: #272822;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.usage-code code {
+    color: #f8f8f2;
+    background: none;
+}
+
+.usage-section ul {
+    margin-left: 20px;
+}
+
+.usage-section ul li {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.usage-section code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+    color: #d63638;
+}
+
+/* ==========================================================================
+   Manage Folders Styles
+   ========================================================================== */
+
+.jsearch-folders-container {
+    display: grid;
+    grid-template-columns: 450px 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.jsearch-folder-form,
+.jsearch-folders-list {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 20px;
+    border-radius: 4px;
+}
+
+.jsearch-folder-form h2,
+.jsearch-folders-list h2 {
+    margin-top: 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.jsearch-no-folders {
+    padding: 40px;
+    text-align: center;
+    color: #646970;
+    background: #f6f7f7;
+    border-radius: 4px;
+}
+
+.jsearch-folder-item {
+    padding: 16px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s ease;
+}
+
+.jsearch-folder-item:hover {
+    background: #f6f7f7;
+}
+
+.jsearch-folder-item:last-child {
+    border-bottom: none;
+}
+
+.jsearch-folder-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #2271b1;
+    margin-bottom: 4px;
+}
+
+.jsearch-folder-id {
+    font-size: 12px;
+    color: #646970;
+    font-family: monospace;
+}
+
+.jsearch-folder-count {
+    background: #ddd;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+/* Responsive Folders */
+@media screen and (max-width: 1024px) {
+    .jsearch-folders-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Hidden Forms */
+.jsearch-hidden-form {
+    display: none;
+}
+
+/* OCR Tab Content - Hidden by default, shown via JS */
+.ocr-tab-content {
+    display: none;
+}
+
+.ocr-tab-content:first-of-type {
+    display: block;
+}
+
+/* Button Group */
+.jsearch-button-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.jsearch-button-group .button .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    vertical-align: text-top;
+}
+
+/* Spin animation for loading icons */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.dashicons-update {
+    animation: spin 1s linear infinite;
+}
+
+/* ==========================================================================
+   Background OCR - Job Status Badges
+   ========================================================================== */
+
+.job-status-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.job-status-badge.status-pending {
+    background: #f0f0f1;
+    color: #646970;
+    border: 1px solid #c3c4c7;
+}
+
+.job-status-badge.status-processing {
+    background: #e5f5ff;
+    color: #0073aa;
+    border: 1px solid #7dd3fc;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.job-status-badge.status-completed {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.job-status-badge.status-failed {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.job-status-badge.status-cancelled {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* Active Jobs List */
+#active-jobs-list {
+    margin-top: 20px;
+}
+
+#active-jobs-list .wp-list-table {
+    background: #fff;
+}
+
+#active-jobs-list .wp-list-table th {
+    font-weight: 600;
+    background: #f6f7f7;
+}
+
+#active-jobs-list .wp-list-table td code {
+    font-size: 12px;
+    background: #f0f0f1;
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+
+/* ==========================================================================
+   Active Jobs Table - Button Layout Fix
+   ========================================================================== */
+
+.jsearch-active-jobs table td:last-child {
+    white-space: nowrap;
+}
+
+.jsearch-active-jobs table .button {
+    margin-right: 5px;
+    margin-bottom: 0;
+}
+
+.jsearch-active-jobs table .button:last-child {
+    margin-right: 0;
+}
+
+/* Ensure buttons stay on same line */
+.jsearch-active-jobs table td {
+    min-width: 120px;
+}
+
+/* ==========================================================================
+   Dashboard Pagination Styling
+   ========================================================================== */
+
+.tablenav .pagination-links a,
+.tablenav .pagination-links span {
+    display: inline-block;
+    padding: 4px 10px;
+    margin: 0 2px;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    background: #fff;
+    color: #2271b1;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    min-width: 32px;
+    text-align: center;
+}
+
+.tablenav .pagination-links a:hover {
+    background: #2271b1;
+    color: #fff;
+    border-color: #2271b1;
+}
+
+.tablenav .pagination-links span.current {
+    background: #2271b1;
+    color: #fff;
+    border-color: #2271b1;
+    font-weight: 600;
+}
+
+.tablenav .pagination-links .prev-page,
+.tablenav .pagination-links .next-page {
+    padding: 4px 8px;
+}
+
+.tablenav-pages {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.displaying-num {
+    color: #646970;
+    font-size: 13px;
+}
