@@ -95,18 +95,24 @@ $placeholder_text = $placeholder_text !== '' ? $placeholder_text : __('Type keyw
         {{/post_thumbnail}}
         <div class="result-content">
             <h3 class="result-title">{{post_title}}</h3>
+            {{#has_pdf_file}}
             <div class="result-meta">
                 <span class="pdf-title">
                     <span class="dashicons dashicons-media-document"></span>
                     {{pdf_title}}
                 </span>
-                {{#folder_name}}
-                <span class="result-folder">
-                    <span class="dashicons dashicons-category"></span>
-                    {{folder_name}}
+                {{#source_type_google}}
+                <span class="source-badge source-badge-google" title="Google Drive">
+                    <span class="dashicons dashicons-google"></span>
                 </span>
-                {{/folder_name}}
+                {{/source_type_google}}
+                {{#source_type_media}}
+                <span class="source-badge source-badge-media" title="WordPress Media">
+                    <span class="dashicons dashicons-wordpress"></span>
+                </span>
+                {{/source_type_media}}
             </div>
+            {{/has_pdf_file}}
             <div class="result-snippet">
                 {{{snippet}}}
             </div>

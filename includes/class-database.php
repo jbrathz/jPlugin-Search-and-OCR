@@ -37,10 +37,15 @@ class PDFS_Database {
         global $wpdb;
         $table = self::get_table_name();
 
-        // Required fields
+        // Required fields validation with detailed logging
         $required = array('file_id', 'pdf_title', 'pdf_url', 'content');
         foreach ($required as $field) {
             if (empty($data[$field])) {
+                PDFS_Logger::error('Database upsert failed: Missing required field', array(
+                    'field' => $field,
+                    'file_id' => $data['file_id'] ?? 'unknown',
+                    'provided_data_keys' => array_keys($data),
+                ));
                 return false;
             }
         }
@@ -133,10 +138,16 @@ class PDFS_Database {
         }
 
         $sql = $wpdb->prepare(
-            "SELECT *, 0 AS relevance
-             FROM {$table}
+            "SELECT
+                t.*,
+                CASE
+                    WHEN t.file_id LIKE 'media_%%' THEN 'media'
+                    ELSE 'pdf'
+                END as source_type,
+                0 AS relevance
+             FROM {$table} t
              {$where}
-             ORDER BY last_updated DESC
+             ORDER BY t.last_updated DESC
              LIMIT %d OFFSET %d",
             array_merge($where_params, array($limit, $offset))
         );
@@ -211,12 +222,16 @@ class PDFS_Database {
             $folder_where = $wpdb->prepare(" AND folder_id = %s", sanitize_text_field($args['folder_id']));
         }
 
-        // PDF search
+        // PDF search (detect WordPress Media by file_id prefix)
         $pdf_sql = $wpdb->prepare(
             "SELECT
-                'pdf' as source_type,
+                CASE
+                    WHEN file_id LIKE 'media_%%' THEN 'media'
+                    ELSE 'pdf'
+                END as source_type,
                 id,
                 post_id,
+                file_id,
                 post_title COLLATE utf8mb4_unicode_ci as post_title,
                 post_url COLLATE utf8mb4_unicode_ci as post_url,
                 pdf_title COLLATE utf8mb4_unicode_ci as title,
@@ -237,7 +252,9 @@ class PDFS_Database {
         if (!empty($excluded_pages) && is_array($excluded_pages)) {
             $exclude_ids = array_map('absint', $excluded_pages);
             if (!empty($exclude_ids)) {
-                $exclude_where = " AND ID NOT IN (" . implode(',', $exclude_ids) . ")";
+                // Use placeholders for safe SQL
+                $placeholders = implode(',', array_fill(0, count($exclude_ids), '%d'));
+                $exclude_where = $wpdb->prepare(" AND ID NOT IN ($placeholders)", $exclude_ids);
             }
         }
 
@@ -247,6 +264,7 @@ class PDFS_Database {
                 'post' as source_type,
                 ID as id,
                 ID as post_id,
+                NULL as file_id,
                 post_title COLLATE utf8mb4_unicode_ci as post_title,
                 CONCAT(%s, '?p=', ID) COLLATE utf8mb4_unicode_ci as post_url,
                 post_title COLLATE utf8mb4_unicode_ci as title,
@@ -323,7 +341,9 @@ class PDFS_Database {
         if (!empty($excluded_pages) && is_array($excluded_pages)) {
             $exclude_ids = array_map('absint', $excluded_pages);
             if (!empty($exclude_ids)) {
-                $exclude_where = " AND ID NOT IN (" . implode(',', $exclude_ids) . ")";
+                // Use placeholders for safe SQL
+                $placeholders = implode(',', array_fill(0, count($exclude_ids), '%d'));
+                $exclude_where = $wpdb->prepare(" AND ID NOT IN ($placeholders)", $exclude_ids);
             }
         }
 

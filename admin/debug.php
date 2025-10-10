@@ -204,7 +204,7 @@ if (!defined('ABSPATH')) exit;
     $is_active = in_array('jsearch/jsearch.php', $active_plugins);
 
     if (!$is_active) {
-        echo '<div class="notice notice-error"><p><strong>⚠️ Plugin is not activated!</strong> Please activate the jSearch plugin first.</p></div>';
+        echo '<div class="notice notice-error"><p><strong>⚠️ Plugin is not activated!</strong> Please activate the plugin first.</p></div>';
         echo '</div>';
         return;
     }
@@ -212,6 +212,9 @@ if (!defined('ABSPATH')) exit;
     // Get settings
     $public_api_enabled = PDFS_Settings::get('advanced.public_api', true);
     $rest_url_base = home_url('/?rest_route=/jsearch/v1');
+
+    // Get plugin namespace dynamically
+    $plugin_namespace = 'jsearch'; // Change this to your plugin namespace
     ?>
 
     <!-- Section 1: System Status -->
@@ -272,158 +275,110 @@ if (!defined('ABSPATH')) exit;
         // Check if routes are registered
         $rest_server = rest_get_server();
         $routes = $rest_server->get_routes();
-        $jsearch_routes = array();
+        $plugin_routes = array();
         foreach ($routes as $route => $handlers) {
-            if (strpos($route, '/jsearch') !== false) {
-                $jsearch_routes[$route] = $handlers;
+            if (strpos($route, '/' . $plugin_namespace) !== false) {
+                $plugin_routes[$route] = $handlers;
             }
         }
         ?>
 
-        <?php if (empty($jsearch_routes)): ?>
+        <?php if (empty($plugin_routes)): ?>
             <div class="notice notice-error inline">
                 <p><strong>⚠️ No REST API routes found!</strong></p>
                 <p>Go to <a href="<?php echo admin_url('options-permalink.php'); ?>">Settings → Permalinks</a> and click "Save Changes" to flush rewrite rules, then refresh this page.</p>
             </div>
         <?php else: ?>
             <div class="notice notice-success inline">
-                <p><strong>✓ Found <?php echo count($jsearch_routes); ?> registered API routes</strong></p>
+                <p><strong>✓ Found <?php echo count($plugin_routes); ?> registered API routes</strong></p>
             </div>
         <?php endif; ?>
     </div>
 
-    <?php if (!empty($jsearch_routes)): ?>
+    <?php if (!empty($plugin_routes)): ?>
 
     <!-- Section 2: API Endpoints -->
     <div class="debug-section">
         <h2>2️⃣ API Endpoints</h2>
-        <p style="color: #646970; margin-bottom: 20px;">Click "Test" buttons to verify endpoints are working correctly.</p>
+        <p style="color: #646970; margin-bottom: 20px;">All registered REST API endpoints for this plugin.</p>
 
-        <!-- Public Endpoints -->
-        <h3 style="font-size: 16px; color: #2c3338; margin: 20px 0 15px 0;">🌐 Public Endpoints</h3>
+        <?php
+        // Group routes by method
+        $public_routes = array();
+        $admin_routes = array();
 
-        <div class="api-endpoint">
-            <div class="api-endpoint-header">
-                <h4 class="api-endpoint-title">Search PDFs</h4>
-                <span class="api-endpoint-method">GET</span>
-            </div>
-            <p class="api-endpoint-desc">
-                Full-text search across all PDF content. Returns matching PDFs with snippets, relevance scores, and associated WordPress posts.
-            </p>
-            <div class="api-endpoint-url">/jsearch/v1/query?q=keyword&limit=10&offset=0</div>
-            <p class="api-endpoint-access">
-                <strong>Access:</strong> <?php echo $public_api_enabled ? 'Public (anyone)' : 'Logged-in users only'; ?>
-            </p>
-            <button type="button" class="button button-primary button-small"
-                    onclick="testEndpoint('<?php echo esc_js($rest_url_base); ?>/query?q=test&limit=5', 'GET', null, false)">
-                Test Search →
-            </button>
-        </div>
+        foreach ($plugin_routes as $route => $handlers) {
+            foreach ($handlers as $handler) {
+                $methods = isset($handler['methods']) ? array_keys($handler['methods']) : array('GET');
+                $permission_callback = isset($handler['permission_callback']) ? $handler['permission_callback'] : null;
 
-        <div class="api-endpoint">
-            <div class="api-endpoint-header">
-                <h4 class="api-endpoint-title">Get Statistics</h4>
-                <span class="api-endpoint-method">GET</span>
-            </div>
-            <p class="api-endpoint-desc">
-                Retrieve database statistics including total PDFs, PDFs with/without posts, and last update timestamp.
-            </p>
-            <div class="api-endpoint-url">/jsearch/v1/stats</div>
-            <p class="api-endpoint-access">
-                <strong>Access:</strong> <?php echo $public_api_enabled ? 'Public (anyone)' : 'Logged-in users only'; ?>
-            </p>
-            <button type="button" class="button button-primary button-small"
-                    onclick="testEndpoint('<?php echo esc_js($rest_url_base); ?>/stats', 'GET', null, false)">
-                Test Stats →
-            </button>
-        </div>
+                // Determine if admin-only
+                $is_admin = false;
+                if (is_array($permission_callback) && count($permission_callback) === 2) {
+                    $method_name = $permission_callback[1];
+                    if (strpos($method_name, 'admin') !== false) {
+                        $is_admin = true;
+                    }
+                }
 
-        <!-- Admin Endpoints -->
-        <h3 style="font-size: 16px; color: #2c3338; margin: 30px 0 15px 0;">🔒 Admin-Only Endpoints</h3>
+                foreach ($methods as $method) {
+                    $endpoint_data = array(
+                        'route' => $route,
+                        'method' => $method,
+                        'is_admin' => $is_admin,
+                    );
 
-        <div class="api-endpoint">
-            <div class="api-endpoint-header">
-                <h4 class="api-endpoint-title">Start OCR Job</h4>
-                <span class="api-endpoint-method method-post">POST</span>
-            </div>
-            <p class="api-endpoint-desc">
-                Create a new background OCR job for a Google Drive folder. Returns job_id for tracking progress.
-            </p>
-            <div class="api-endpoint-url">/jsearch/v1/ocr-job/start</div>
-            <p class="api-endpoint-access"><strong>Access:</strong> Admin only (manage_options capability)</p>
-        </div>
+                    if ($is_admin) {
+                        $admin_routes[] = $endpoint_data;
+                    } else {
+                        $public_routes[] = $endpoint_data;
+                    }
+                }
+            }
+        }
 
-        <div class="api-endpoint">
-            <div class="api-endpoint-header">
-                <h4 class="api-endpoint-title">Get All Active Jobs</h4>
-                <span class="api-endpoint-method">GET</span>
-            </div>
-            <p class="api-endpoint-desc">
-                List all active/paused/completed OCR jobs with progress details, processed files count, and status.
-            </p>
-            <div class="api-endpoint-url">/jsearch/v1/ocr-jobs</div>
-            <p class="api-endpoint-access"><strong>Access:</strong> Admin only</p>
-        </div>
+        // Function to get method class
+        function get_method_class($method) {
+            $method = strtoupper($method);
+            if ($method === 'POST') return 'method-post';
+            if ($method === 'DELETE') return 'method-delete';
+            return '';
+        }
 
-        <div class="api-endpoint">
-            <div class="api-endpoint-header">
-                <h4 class="api-endpoint-title">Get Job Status</h4>
-                <span class="api-endpoint-method">GET</span>
-            </div>
-            <p class="api-endpoint-desc">
-                Get detailed status of a specific OCR job including batch details, progress, and failed files.
-            </p>
-            <div class="api-endpoint-url">/jsearch/v1/ocr-job/{job_id}/status-detailed</div>
-            <p class="api-endpoint-access"><strong>Access:</strong> Admin only</p>
-        </div>
+        // Display public routes
+        if (!empty($public_routes)): ?>
+            <h3 style="font-size: 16px; color: #2c3338; margin: 20px 0 15px 0;">🌐 Public Endpoints</h3>
+            <?php foreach ($public_routes as $endpoint): ?>
+                <div class="api-endpoint">
+                    <div class="api-endpoint-header">
+                        <h4 class="api-endpoint-title"><?php echo esc_html($endpoint['route']); ?></h4>
+                        <span class="api-endpoint-method <?php echo get_method_class($endpoint['method']); ?>">
+                            <?php echo esc_html($endpoint['method']); ?>
+                        </span>
+                    </div>
+                    <div class="api-endpoint-url"><?php echo esc_html($endpoint['route']); ?></div>
+                    <p class="api-endpoint-access">
+                        <strong>Access:</strong> <?php echo $public_api_enabled ? 'Public (anyone)' : 'Logged-in users only'; ?>
+                    </p>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
 
-        <div class="api-endpoint">
-            <div class="api-endpoint-header">
-                <h4 class="api-endpoint-title">Process Batch</h4>
-                <span class="api-endpoint-method method-post">POST</span>
-            </div>
-            <p class="api-endpoint-desc">
-                Process a single batch of files (up to 5 files). Used for realtime JavaScript-driven OCR processing.
-            </p>
-            <div class="api-endpoint-url">/jsearch/v1/ocr-job/process-batch</div>
-            <p class="api-endpoint-access"><strong>Access:</strong> Admin only</p>
-        </div>
-
-        <div class="api-endpoint">
-            <div class="api-endpoint-header">
-                <h4 class="api-endpoint-title">Pause/Resume Job</h4>
-                <span class="api-endpoint-method method-post">POST</span>
-            </div>
-            <p class="api-endpoint-desc">
-                Pause or resume an OCR job. Useful for managing long-running processes or freeing up resources.
-            </p>
-            <div class="api-endpoint-url">/jsearch/v1/ocr-job/{job_id}/pause<br>/jsearch/v1/ocr-job/{job_id}/resume</div>
-            <p class="api-endpoint-access"><strong>Access:</strong> Admin only</p>
-        </div>
-
-        <div class="api-endpoint">
-            <div class="api-endpoint-header">
-                <h4 class="api-endpoint-title">Cancel/Delete Job</h4>
-                <span class="api-endpoint-method method-delete">DELETE</span>
-            </div>
-            <p class="api-endpoint-desc">
-                Cancel an active job or delete a completed job. Use ?force=true to force delete even if job not found.
-            </p>
-            <div class="api-endpoint-url">/jsearch/v1/ocr-job/{job_id}?force=true</div>
-            <p class="api-endpoint-access"><strong>Access:</strong> Admin only</p>
-        </div>
-
-        <div class="api-endpoint">
-            <div class="api-endpoint-header">
-                <h4 class="api-endpoint-title">Single File OCR</h4>
-                <span class="api-endpoint-method method-post">POST</span>
-            </div>
-            <p class="api-endpoint-desc">
-                Process a single PDF file immediately. Returns OCR result including text content and character count.
-            </p>
-            <div class="api-endpoint-url">/jsearch/v1/ocr</div>
-            <p class="api-endpoint-access"><strong>Access:</strong> Admin only</p>
-        </div>
+        <?php if (!empty($admin_routes)): ?>
+            <h3 style="font-size: 16px; color: #2c3338; margin: 30px 0 15px 0;">🔒 Admin-Only Endpoints</h3>
+            <?php foreach ($admin_routes as $endpoint): ?>
+                <div class="api-endpoint">
+                    <div class="api-endpoint-header">
+                        <h4 class="api-endpoint-title"><?php echo esc_html($endpoint['route']); ?></h4>
+                        <span class="api-endpoint-method <?php echo get_method_class($endpoint['method']); ?>">
+                            <?php echo esc_html($endpoint['method']); ?>
+                        </span>
+                    </div>
+                    <div class="api-endpoint-url"><?php echo esc_html($endpoint['route']); ?></div>
+                    <p class="api-endpoint-access"><strong>Access:</strong> Admin only (requires authentication)</p>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 
     <!-- Section 3: Troubleshooting -->
@@ -433,31 +388,31 @@ if (!defined('ABSPATH')) exit;
         <ul class="troubleshooting-list">
             <li>
                 <strong>REST API returns 404 errors</strong>
-                Go to <a href="<?php echo admin_url('options-permalink.php'); ?>">Settings → Permalinks</a> and click "Save Changes" to flush rewrite rules.
+                Go to <a href="<?php echo admin_url('options-permalink.php'); ?>">Settings → Permalinks</a> and click "Save Changes" to flush rewrite rules. This re-registers all REST API routes.
             </li>
             <li>
-                <strong>Public endpoints return 403 Forbidden</strong>
-                Check "Public API Access" setting in <a href="<?php echo admin_url('admin.php?page=' . JSEARCH_SETTINGS_SLUG); ?>">jSearch Settings → Advanced</a>. If disabled, only logged-in users can access search/stats endpoints.
+                <strong>Endpoints return 403 Forbidden</strong>
+                Check your plugin's permission settings. Some endpoints may require user authentication or specific capabilities.
             </li>
             <li>
-                <strong>OCR endpoints not working</strong>
-                Verify Python OCR API is running and the API URL/Key are correct in <a href="<?php echo admin_url('admin.php?page=' . JSEARCH_SETTINGS_SLUG); ?>">jSearch Settings → API</a>. Use "Test Connection" button to verify.
+                <strong>Endpoints return unexpected errors</strong>
+                Check your WordPress debug log for detailed error messages. Enable WP_DEBUG in wp-config.php if not already enabled.
             </li>
             <li>
-                <strong>Jobs not showing in Active Jobs table</strong>
-                Completed jobs are auto-cleaned after 1 hour. Check if job status is "completed" and older than 1 hour.
-            </li>
-            <li>
-                <strong>Need help with cURL testing</strong>
-                Use this command format:<br>
+                <strong>Testing with cURL</strong>
+                Use this command format to test any endpoint:<br>
                 <code style="background: #f6f7f7; padding: 4px 8px; border-radius: 3px; display: inline-block; margin-top: 8px;">
-                    curl "<?php echo esc_url($rest_url_base); ?>/stats"
+                    curl "<?php echo esc_url(home_url('/?rest_route=/{namespace}/v1/{endpoint}')); ?>"
                 </code>
+            </li>
+            <li>
+                <strong>Authentication for admin endpoints</strong>
+                Admin endpoints require authentication. Use X-WP-Nonce header with a valid nonce, or test from browser console while logged in.
             </li>
         </ul>
 
         <div style="margin-top: 20px; padding: 15px; background: #e5f5ff; border-left: 3px solid #2271b1; border-radius: 0 4px 4px 0;">
-            <p style="margin: 0; color: #2c3338;"><strong>💡 Tip:</strong> All admin endpoints require authentication with X-WP-Nonce header. Public endpoints respect the "Public API Access" setting.</p>
+            <p style="margin: 0; color: #2c3338;"><strong>💡 Tip:</strong> Use browser developer tools (Network tab) to inspect REST API requests and responses when debugging issues.</p>
         </div>
     </div>
 

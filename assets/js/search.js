@@ -137,14 +137,21 @@
 
                 itemHtml = itemHtml.replace(/\{\{pdf_title\}\}/g, highlightedPdfTitle);
 
-                if (item.folder_name) {
-                    const highlightedFolderName = highlightText(escapeHtml(item.folder_name), query);
-                    itemHtml = itemHtml.replace(/\{\{#folder_name\}\}/g, '');
-                    itemHtml = itemHtml.replace(/\{\{\/folder_name\}\}/g, '');
-                    itemHtml = itemHtml.replace(/\{\{folder_name\}\}/g, highlightedFolderName);
+                // Handle source type badges - remove unwanted badge completely
+                if (item.source_type === 'media') {
+                    // WordPress Media - show media badge, remove google badge
+                    itemHtml = itemHtml.replace(/\{\{#source_type_media\}\}/g, '');
+                    itemHtml = itemHtml.replace(/\{\{\/source_type_media\}\}/g, '');
+                    itemHtml = itemHtml.replace(/\{\{#source_type_google\}\}[\s\S]*?\{\{\/source_type_google\}\}/g, '');
                 } else {
-                    itemHtml = itemHtml.replace(/\{\{#folder_name\}\}[\s\S]*?\{\{\/folder_name\}\}/g, '');
+                    // Google Drive (pdf) or other - show google badge, remove media badge
+                    itemHtml = itemHtml.replace(/\{\{#source_type_google\}\}/g, '');
+                    itemHtml = itemHtml.replace(/\{\{\/source_type_google\}\}/g, '');
+                    itemHtml = itemHtml.replace(/\{\{#source_type_media\}\}[\s\S]*?\{\{\/source_type_media\}\}/g, '');
                 }
+
+                // Remove folder name section completely
+                itemHtml = itemHtml.replace(/\{\{#folder_name\}\}[\s\S]*?\{\{\/folder_name\}\}/g, '');
 
                 // Highlight snippet
                 const highlightedSnippet = highlightText(escapeHtml(item.snippet), query);
@@ -157,6 +164,16 @@
                     itemHtml = itemHtml.replace(/\{\{post_thumbnail\}\}/g, escapeHtml(item.post_thumbnail));
                 } else {
                     itemHtml = itemHtml.replace(/\{\{#post_thumbnail\}\}[\s\S]*?\{\{\/post_thumbnail\}\}/g, '');
+                }
+
+                // Handle PDF file section - hide for WordPress Posts without PDF
+                if (item.source_type === 'post') {
+                    // WordPress Post/Page without PDF - remove PDF file section
+                    itemHtml = itemHtml.replace(/\{\{#has_pdf_file\}\}[\s\S]*?\{\{\/has_pdf_file\}\}/g, '');
+                } else {
+                    // PDF file (Google Drive or WordPress Media) - show PDF file section
+                    itemHtml = itemHtml.replace(/\{\{#has_pdf_file\}\}/g, '');
+                    itemHtml = itemHtml.replace(/\{\{\/has_pdf_file\}\}/g, '');
                 }
 
                 html += itemHtml;

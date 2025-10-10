@@ -636,15 +636,6 @@
     display: none;
 }
 
-/* OCR Tab Content - Hidden by default, shown via JS */
-.ocr-tab-content {
-    display: none;
-}
-
-.ocr-tab-content:first-of-type {
-    display: block;
-}
-
 /* Button Group */
 .jsearch-button-group {
     display: flex;

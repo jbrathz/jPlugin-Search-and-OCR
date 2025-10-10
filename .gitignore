@@ -1,18 +1,35 @@
-# General
-.claude/
-.DS_Store
-Thumbs.db
-
-# Logs and caches
-*.log
-*.cache
-
-# Build / dependencies
-node_modules/
-vendor/
-dist/
-*.zip
-
 # IDE
 .idea/
 .vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Composer
+vendor/
+composer.lock
+
+# Build
+dist/
+*.zip
+
+# WordPress
+wp-config.php
+.htaccess
+
+# Plugin specific
+uploads/jsearch/*.log
+uploads/jsearch/*.log.*

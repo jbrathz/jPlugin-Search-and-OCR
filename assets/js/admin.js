@@ -104,6 +104,15 @@
             });
         });
 
+        // Manual OCR: Initialize tabs on page load
+        if ($('.jsearch-ocr-tabs').length > 0) {
+            // Hide all tabs first
+            $('.ocr-tab-content').hide();
+
+            // Show the first tab (Google Drive File)
+            $('#ocr-file').show();
+        }
+
         // Manual OCR: Tab Switching
         $('.jsearch-ocr-tabs').on('click', '.nav-tab', function(e) {
             e.preventDefault();

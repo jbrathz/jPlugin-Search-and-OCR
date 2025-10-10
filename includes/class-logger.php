@@ -20,7 +20,7 @@ class PDFS_Logger {
     const DEBUG   = 'DEBUG';
 
     /**
-     * Log Error (always logged)
+     * Log Error (always logged regardless of debug mode)
      *
      * Critical errors that need immediate attention
      *
@@ -28,11 +28,11 @@ class PDFS_Logger {
      * @param array $context
      */
     public static function error($message, $context = array()) {
-        self::log(self::ERROR, $message, $context);
+        self::log(self::ERROR, $message, $context, true);
     }
 
     /**
-     * Log Warning (always logged)
+     * Log Warning (only when debug mode is enabled)
      *
      * Non-critical issues that should be reviewed
      *
@@ -40,7 +40,9 @@ class PDFS_Logger {
      * @param array $context
      */
     public static function warning($message, $context = array()) {
-        self::log(self::WARNING, $message, $context);
+        if (self::is_debug_enabled()) {
+            self::log(self::WARNING, $message, $context, false);
+        }
     }
 
     /**
@@ -53,7 +55,7 @@ class PDFS_Logger {
      */
     public static function info($message, $context = array()) {
         if (self::is_debug_enabled()) {
-            self::log(self::INFO, $message, $context);
+            self::log(self::INFO, $message, $context, false);
         }
     }
 
@@ -67,7 +69,7 @@ class PDFS_Logger {
      */
     public static function debug($message, $context = array()) {
         if (self::is_debug_enabled()) {
-            self::log(self::DEBUG, $message, $context);
+            self::log(self::DEBUG, $message, $context, false);
         }
     }
 
@@ -77,8 +79,9 @@ class PDFS_Logger {
      * @param string $level
      * @param string $message
      * @param array $context
+     * @param bool $force Always log regardless of debug mode (for errors)
      */
-    private static function log($level, $message, $context = array()) {
+    private static function log($level, $message, $context = array(), $force = false) {
         // Format: [PDFSEARCH ERROR] Message | {"key":"value"}
         $log_message = sprintf(
             '[PDFSEARCH %s] %s',
@@ -90,41 +93,46 @@ class PDFS_Logger {
             $log_message .= ' | ' . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
 
-        error_log($log_message);
-
-        // Optional: Save to custom log file
-        self::write_to_file($level, $log_message);
+        // Save to custom log file
+        self::write_to_file($level, $log_message, $force);
     }
 
     /**
-     * Write to custom log file (optional)
+     * Write to custom log file
      *
      * @param string $level
      * @param string $message
+     * @param bool $force Always log regardless of debug mode (for errors)
      */
-    private static function write_to_file($level, $message) {
-        // Only write to file if log retention is enabled
-        $retention_days = PDFS_Settings::get('advanced.log_retention_days', 0);
+    private static function write_to_file($level, $message, $force = false) {
+        // Skip logging if debug mode is disabled and not forced (errors are always logged)
+        if (!$force && !self::is_debug_enabled()) {
+            return;
+        }
 
+        $upload_dir = wp_upload_dir();
+        $log_dir = $upload_dir['basedir'] . '/jsearch';
+        $log_file = $log_dir . '/jsearch.log';
+
+        if (!file_exists($log_dir)) {
+            wp_mkdir_p($log_dir);
+        }
+
+        $timestamp = current_time('Y-m-d H:i:s');
+        $log_entry = sprintf("[%s] %s\n", $timestamp, $message);
+
+        // Append to log file
+        file_put_contents($log_file, $log_entry, FILE_APPEND);
+
+        // Rotate log if too large (> 10MB)
+        if (file_exists($log_file) && filesize($log_file) > 10 * 1024 * 1024) {
+            self::rotate_log($log_file);
+        }
+
+        // Clean up old logs based on retention setting
+        $retention_days = PDFS_Settings::get('advanced.log_retention_days', 30);
         if ($retention_days > 0) {
-            $upload_dir = wp_upload_dir();
-            $log_dir = $upload_dir['basedir'] . '/jsearch';
-            $log_file = $log_dir . '/jsearch.log';
-
-            if (!file_exists($log_dir)) {
-                wp_mkdir_p($log_dir);
-            }
-
-            $timestamp = current_time('Y-m-d H:i:s');
-            $log_entry = sprintf("[%s] %s\n", $timestamp, $message);
-
-            // Append to log file
-            file_put_contents($log_file, $log_entry, FILE_APPEND);
-
-            // Rotate log if too large (> 10MB)
-            if (file_exists($log_file) && filesize($log_file) > 10 * 1024 * 1024) {
-                self::rotate_log($log_file);
-            }
+            self::cleanup_old_logs($log_dir, $retention_days);
         }
     }
 
@@ -136,10 +144,15 @@ class PDFS_Logger {
     private static function rotate_log($log_file) {
         $backup = $log_file . '.' . date('YmdHis');
         rename($log_file, $backup);
+    }
 
-        // Delete old backup files
-        $retention_days = PDFS_Settings::get('advanced.log_retention_days', 30);
-        $log_dir = dirname($log_file);
+    /**
+     * Clean up old log files
+     *
+     * @param string $log_dir
+     * @param int $retention_days
+     */
+    private static function cleanup_old_logs($log_dir, $retention_days) {
         $files = glob($log_dir . '/jsearch.log.*');
 
         foreach ($files as $file) {

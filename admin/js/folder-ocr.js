@@ -35,8 +35,8 @@
          * Bind Events
          */
         bindEvents: function() {
-            // Intercept form submissions (Single File + Entire Folder only)
-            $('#ocr-file form, #ocr-folder form').on('submit', this.handleFormSubmit.bind(this));
+            // Intercept form submissions (Single File + Entire Folder + WordPress Media)
+            $('#ocr-file form, #ocr-folder form, #ocr-media form').on('submit', this.handleFormSubmit.bind(this));
 
             // Control buttons
             $(document).on('click', '.jsearch-pause-job', this.pauseJob.bind(this));
@@ -110,9 +110,11 @@
 
             const $form = $(e.target);
             const isSingleFile = $form.closest('#ocr-file').length > 0;
+            const isFolder = $form.closest('#ocr-folder').length > 0;
+            const isMedia = $form.closest('#ocr-media').length > 0;
 
             if (isSingleFile) {
-                // Single File Mode
+                // Single File Mode (Google Drive)
                 const fileId = $form.find('input[name="file_id"]').val();
 
                 if (!fileId) {
@@ -126,8 +128,8 @@
                 }
 
                 this.processSingleFile(fileId);
-            } else {
-                // Entire Folder Mode
+            } else if (isFolder) {
+                // Entire Folder Mode (Google Drive)
                 const folderId = $form.find('select[name="folder_id"]').val();
 
                 if (!folderId) {
@@ -141,6 +143,10 @@
                 }
 
                 this.startJob(folderId);
+            } else if (isMedia) {
+                // WordPress Media Mode
+                const filter = $form.find('input[name="media_filter"]:checked').val() || 'all';
+                this.startMediaJob(filter);
             }
 
             return false;
@@ -199,7 +205,7 @@
         },
 
         /**
-         * Start OCR Job (Entire Folder)
+         * Start OCR Job (Entire Folder - Google Drive)
          * Automatically skips files already in database
          */
         startJob: function(folderId) {
@@ -237,6 +243,52 @@
                 error: function(xhr) {
                     const error = xhr.responseJSON?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ API';
                     this.showError('ไม่สามารถสร้าง job ได้: ' + error);
+                }.bind(this)
+            });
+        },
+
+        /**
+         * Start Media OCR Job (WordPress Media Library)
+         * Automatically skips files already in database
+         */
+        startMediaJob: function(filter) {
+            this.isSingleFileMode = false; // Ensure job mode flag
+            this.showProgress('กำลังสแกน PDF ใน Media Library และสร้าง job...');
+
+            $.ajax({
+                url: jsearchAdmin.restUrl + 'media-ocr/start',
+                method: 'POST',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-WP-Nonce', jsearchAdmin.rest_nonce);
+                },
+                data: JSON.stringify({
+                    filter: filter,
+                }),
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.success) {
+                        this.currentJobId = response.job_id;
+                        this.isProcessing = true;
+                        this.isPaused = false;
+
+                        const filterText = filter === 'unprocessed' ? ' (ยังไม่ผ่านการประมวลผล)' : '';
+                        this.updateProgress(
+                            'Media Job สร้างเรียบร้อย: ' + response.total_files + ' ไฟล์' + filterText,
+                            0,
+                            response.total_files
+                        );
+
+                        // เริ่ม process batch แรก
+                        setTimeout(() => this.processNextBatch(), 1000);
+                    } else {
+                        this.showError('ไม่สามารถสร้าง Media job ได้: ' + (response.message || 'Unknown error'));
+                        this.hideProgress();
+                    }
+                }.bind(this),
+                error: function(xhr) {
+                    const error = xhr.responseJSON?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ API';
+                    this.showError('ไม่สามารถสร้าง Media job ได้: ' + error);
+                    this.hideProgress();
                 }.bind(this)
             });
         },

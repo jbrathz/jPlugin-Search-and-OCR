@@ -167,6 +167,21 @@ class PDFS_REST_API {
             'callback' => array($this, 'resume_job'),
             'permission_callback' => array($this, 'admin_permission_check'),
         ));
+
+        // Start Media OCR Job endpoint (admin only)
+        register_rest_route(self::NAMESPACE, '/media-ocr/start', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'start_media_ocr_job'),
+            'permission_callback' => array($this, 'admin_permission_check'),
+            'args' => array(
+                'filter' => array(
+                    'required' => false,
+                    'enum' => array('all', 'unprocessed'),
+                    'default' => 'all',
+                    'description' => 'Filter: all PDFs or unprocessed only',
+                ),
+            ),
+        ));
     }
 
     /**
@@ -221,11 +236,20 @@ class PDFS_REST_API {
         $formatted = array_map(function($item) use ($query) {
             $source_type = isset($item->source_type) ? $item->source_type : 'pdf';
 
+            // For WordPress Posts/Pages, use WordPress functions to get correct URL and title
+            if ($source_type === 'post') {
+                $post_title = get_the_title($item->post_id);
+                $post_url = get_permalink($item->post_id);
+            } else {
+                $post_title = $item->post_title;
+                $post_url = $item->post_url;
+            }
+
             return array(
                 'id' => (int) $item->id,
                 'source_type' => $source_type,
-                'post_title' => $item->post_title,
-                'post_url' => $item->post_url,
+                'post_title' => $post_title,
+                'post_url' => $post_url,
                 'post_thumbnail' => self::get_post_thumbnail($item->post_id),
                 'pdf_title' => isset($item->pdf_title) ? $item->pdf_title : $item->title,
                 'pdf_url' => isset($item->pdf_url) ? $item->pdf_url : $item->url,
@@ -282,7 +306,16 @@ class PDFS_REST_API {
             }
 
             if (isset($result['result'])) {
-                $ocr_service->save_result($result['result']);
+                // Try to find post that contains this file
+                $post_id = self::find_post_by_file_id($file_id);
+
+                if ($post_id) {
+                    // Found post → save with post_id
+                    $ocr_service->save_result($result['result'], $post_id);
+                } else {
+                    // Not found → save without post_id
+                    $ocr_service->save_result($result['result']);
+                }
             }
 
             return rest_ensure_response($result);
@@ -304,7 +337,17 @@ class PDFS_REST_API {
             // ถ้าเป็น background mode จะไม่มี results ทันที
             if (isset($result['results'])) {
                 foreach ($result['results'] as $item) {
-                    $ocr_service->save_result($item);
+                    // Try to find post that contains this file
+                    $item_file_id = isset($item['file_id']) ? $item['file_id'] : null;
+                    $post_id = $item_file_id ? self::find_post_by_file_id($item_file_id) : null;
+
+                    if ($post_id) {
+                        // Found post → save with post_id
+                        $ocr_service->save_result($item, $post_id);
+                    } else {
+                        // Not found → save without post_id
+                        $ocr_service->save_result($item);
+                    }
                 }
             }
 
@@ -435,6 +478,86 @@ class PDFS_REST_API {
     }
 
     /**
+     * Start Media OCR Job (WordPress Media Library)
+     */
+    public static function start_media_ocr_job($request) {
+        $filter = $request->get_param('filter');
+
+        PDFS_Logger::debug('Starting Media OCR job', array('filter' => $filter));
+
+        // ค้นหา PDF attachments ใน Media Library
+        $args = array(
+            'post_type' => 'attachment',
+            'post_mime_type' => 'application/pdf',
+            'post_status' => 'inherit',
+            'posts_per_page' => -1, // Get all PDFs
+            'fields' => 'ids',
+        );
+
+        $pdf_attachments = get_posts($args);
+
+        if (empty($pdf_attachments)) {
+            return new WP_Error('no_pdfs', __('No PDF files found in Media Library', 'jsearch'), array('status' => 404));
+        }
+
+        PDFS_Logger::debug('Found PDF attachments', array('total' => count($pdf_attachments)));
+
+        // ถ้าเลือก unprocessed ให้กรองออกเฉพาะที่ยังไม่ถูก process
+        if ($filter === 'unprocessed') {
+            $unprocessed = array();
+            foreach ($pdf_attachments as $attachment_id) {
+                $media_file_id = 'media_' . $attachment_id;
+                if (!PDFS_Queue_Service::is_file_processed($media_file_id)) {
+                    $unprocessed[] = $attachment_id;
+                }
+            }
+            $pdf_attachments = $unprocessed;
+
+            PDFS_Logger::debug('Filtered to unprocessed only', array('total' => count($pdf_attachments)));
+        }
+
+        if (empty($pdf_attachments)) {
+            return new WP_Error('no_unprocessed', __('No unprocessed PDF files found', 'jsearch'), array('status' => 404));
+        }
+
+        // ตรวจสอบว่ามี Media job ที่กำลังรันอยู่หรือไม่
+        $existing_job = PDFS_Queue_Service::get_active_job_by_folder('wordpress_media');
+        if ($existing_job) {
+            PDFS_Logger::info('Media OCR job already exists', array(
+                'job_id' => $existing_job->job_id,
+                'status' => $existing_job->status,
+            ));
+
+            return rest_ensure_response(array(
+                'success' => true,
+                'job_id' => $existing_job->job_id,
+                'total_files' => (int) $existing_job->total_files,
+                'message' => __('Media OCR job is already running.', 'jsearch'),
+                'status' => $existing_job->status,
+                'processed_files' => (int) $existing_job->processed_files,
+                'failed_files' => (int) $existing_job->failed_files,
+            ));
+        }
+
+        // สร้าง job
+        $job_id = PDFS_Queue_Service::create_media_job($pdf_attachments);
+
+        if (!$job_id) {
+            PDFS_Logger::error('Failed to create media job');
+            return new WP_Error('job_creation_failed', 'Failed to create media job', array('status' => 500));
+        }
+
+        PDFS_Logger::info('Media OCR job created', array('job_id' => $job_id, 'total_files' => count($pdf_attachments)));
+
+        return rest_ensure_response(array(
+            'success' => true,
+            'job_id' => $job_id,
+            'total_files' => count($pdf_attachments),
+            'message' => 'Media OCR job created successfully. Processing will start automatically.',
+        ));
+    }
+
+    /**
      * Get OCR Job Status
      */
     public static function get_ocr_job_status($request) {
@@ -530,18 +653,43 @@ class PDFS_REST_API {
 
     /**
      * Process Batch (Realtime)
+     * Automatically detects job type (Google Drive or WordPress Media) and routes to appropriate processor
      */
     public static function process_batch($request) {
+        global $wpdb;
+
         $batch_id = $request->get_param('batch_id');
 
         if (empty($batch_id)) {
             return new WP_Error('missing_batch_id', 'Batch ID required', array('status' => 400));
         }
 
-        PDFS_Logger::info('Processing batch realtime', array('batch_id' => $batch_id));
+        // ดึงข้อมูล batch เพื่อเช็ค job_id
+        $table_batches = $wpdb->prefix . 'jsearch_job_batches';
+        $batch = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM `{$table_batches}` WHERE `id` = %d",
+            $batch_id
+        ));
 
-        // Process batch
-        $result = PDFS_Queue_Service::process_batch_realtime($batch_id);
+        if (!$batch) {
+            return new WP_Error('batch_not_found', 'Batch not found', array('status' => 404));
+        }
+
+        // ตรวจสอบว่าเป็น Media job หรือไม่ (จาก job_id prefix)
+        $is_media_job = strpos($batch->job_id, 'media_job_') === 0;
+
+        PDFS_Logger::info('Processing batch realtime', array(
+            'batch_id' => $batch_id,
+            'job_id' => $batch->job_id,
+            'type' => $is_media_job ? 'media' : 'gdrive',
+        ));
+
+        // เรียก processor ที่เหมาะสม
+        if ($is_media_job) {
+            $result = PDFS_Queue_Service::process_media_batch_realtime($batch_id);
+        } else {
+            $result = PDFS_Queue_Service::process_batch_realtime($batch_id);
+        }
 
         if (!$result['success']) {
             return new WP_Error(
@@ -553,6 +701,7 @@ class PDFS_REST_API {
 
         PDFS_Logger::info('Batch processed', array(
             'batch_id' => $batch_id,
+            'type' => $is_media_job ? 'media' : 'gdrive',
             'processed' => $result['processed'],
             'skipped' => $result['skipped'],
             'failed' => $result['failed'],
@@ -675,6 +824,39 @@ class PDFS_REST_API {
      */
     public static function admin_permission_check() {
         return current_user_can('manage_options');
+    }
+
+    /**
+     * Find Post by File ID
+     *
+     * Searches for a post that contains the given file (Google Drive or WordPress Media)
+     *
+     * @param string $file_id File ID (Google Drive ID or media_{attachment_id})
+     * @return int|null Post ID if found, null otherwise
+     */
+    public static function find_post_by_file_id($file_id) {
+        // Case 1: WordPress Media (media_123)
+        if (strpos($file_id, 'media_') === 0) {
+            $attachment_id = (int) str_replace('media_', '', $file_id);
+            $parent_id = wp_get_post_parent_id($attachment_id);
+            return $parent_id > 0 ? $parent_id : null;
+        }
+
+        // Case 2: Google Drive files
+        // Search for posts containing the Google Drive URL
+        global $wpdb;
+        $pattern = '%drive.google.com/file/d/' . $wpdb->esc_like($file_id) . '%';
+
+        $post_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts}
+             WHERE post_content LIKE %s
+             AND post_status = 'publish'
+             AND post_type IN ('post', 'page')
+             ORDER BY post_date DESC LIMIT 1",
+            $pattern
+        ));
+
+        return $post_id ? (int) $post_id : null;
     }
 
     /**

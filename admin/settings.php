@@ -47,7 +47,6 @@ if (isset($_POST['jsearch_save_settings']) && check_admin_referer('jsearch_setti
     } elseif ($tab === 'advanced') {
         PDFS_Settings::set('advanced.debug_mode', isset($_POST['advanced_debug_mode']));
         PDFS_Settings::set('advanced.public_api', isset($_POST['advanced_public_api']));
-        PDFS_Settings::set('advanced.rate_limit', absint($_POST['advanced_rate_limit']));
         $log_retention_days = absint($_POST['advanced_log_retention']);
         PDFS_Settings::set('advanced.log_retention_days', $log_retention_days);
 
@@ -109,7 +108,7 @@ $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'usage'
             <?php _e('API', 'jsearch'); ?>
         </a>
         <a href="?page=jsearch-settings&tab=gdrive" class="nav-tab <?php echo $current_tab === 'gdrive' ? 'nav-tab-active' : ''; ?>">
-            <?php _e('Google Drive', 'jsearch'); ?>
+            <?php _e('OCR Settings', 'jsearch'); ?>
         </a>
         <a href="?page=jsearch-settings&tab=search" class="nav-tab <?php echo $current_tab === 'search' ? 'nav-tab-active' : ''; ?>">
             <?php _e('Search', 'jsearch'); ?>
@@ -205,10 +204,10 @@ $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'usage'
                 <p><?php _e('Configure the plugin in the tabs above:', 'jsearch'); ?></p>
                 <ul>
                     <li><strong>API</strong> - <?php _e('Configure OCR API connection', 'jsearch'); ?></li>
-                    <li><strong>Google Drive</strong> - <?php _e('Set OCR language preferences', 'jsearch'); ?></li>
+                    <li><strong>OCR Settings</strong> - <?php _e('Set OCR language for Google Drive PDFs and WordPress Media PDFs', 'jsearch'); ?></li>
                     <li><strong>Search</strong> - <?php _e('Configure search behavior, popular keywords, and exclude specific pages from search results', 'jsearch'); ?></li>
                     <li><strong>Display</strong> - <?php _e('Customize how results are displayed', 'jsearch'); ?></li>
-                    <li><strong>Automation</strong> - <?php _e('Enable automatic OCR processing', 'jsearch'); ?></li>
+                    <li><strong>Automation</strong> - <?php _e('Enable Auto-OCR to detect PDFs from 4 sources: Google Drive URLs, Google Drive embeds, PDF attachments, and local PDF embeds', 'jsearch'); ?></li>
                     <li><strong>Advanced</strong> - <?php _e('Debug mode, API limits, and logs', 'jsearch'); ?></li>
                     <li><strong>Import/Export</strong> - <?php _e('Backup and restore settings', 'jsearch'); ?></li>
                 </ul>
@@ -280,10 +279,10 @@ $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'usage'
             </form>
 
         <?php elseif ($current_tab === 'gdrive'): ?>
-            <!-- Google Drive Settings -->
+            <!-- OCR Settings -->
             <div class="notice notice-info inline" >
-                <p><strong><?php _e('Configure Google Drive and OCR', 'jsearch'); ?></strong></p>
-                <p><?php _e('Set the language used for OCR reading (e.g., tha+eng for reading both Thai and English)', 'jsearch'); ?></p>
+                <p><strong><?php _e('Configure OCR Settings', 'jsearch'); ?></strong></p>
+                <p><?php _e('Set the OCR language for both Google Drive PDFs and WordPress Media PDFs (e.g., tha+eng for reading both Thai and English)', 'jsearch'); ?></p>
             </div>
 
             <form method="post" action="">
@@ -502,7 +501,7 @@ $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'usage'
             <!-- Automation Settings -->
             <div class="notice notice-info inline" >
                 <p><strong><?php _e('Configure Automation Settings', 'jsearch'); ?></strong></p>
-                <p><?php _e('Enable Auto-OCR to automatically process Google Drive PDFs when saving posts.', 'jsearch'); ?></p>
+                <p><?php _e('Enable Auto-OCR to automatically process PDFs when saving posts.', 'jsearch'); ?></p>
             </div>
 
             <form method="post" action="">
@@ -516,7 +515,13 @@ $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'usage'
                         </th>
                         <td>
                             <input type="checkbox" name="automation_auto_ocr" id="automation_auto_ocr" value="1" <?php checked(PDFS_Settings::get('automation.auto_ocr'), true); ?>>
-                            <p class="description"><?php _e('Automatically detect and OCR Google Drive PDF links when saving posts. The plugin will scan post content for Google Drive URLs and process them automatically.', 'jsearch'); ?></p>
+                            <p class="description">
+                                <?php _e('Automatically detect and OCR PDF files when saving posts. The plugin will scan for:', 'jsearch'); ?><br>
+                                <strong>1.</strong> <?php _e('Google Drive URLs in post content', 'jsearch'); ?><br>
+                                <strong>2.</strong> <?php _e('Google Drive embeds/iframes', 'jsearch'); ?><br>
+                                <strong>3.</strong> <?php _e('PDF files attached to the post', 'jsearch'); ?><br>
+                                <strong>4.</strong> <?php _e('Local PDF embeds/iframes (WordPress Media)', 'jsearch'); ?>
+                            </p>
                         </td>
                     </tr>
                 </table>
@@ -552,15 +557,6 @@ $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'usage'
                         <td>
                             <input type="checkbox" name="advanced_public_api" id="advanced_public_api" value="1" <?php checked(PDFS_Settings::get('advanced.public_api'), true); ?>>
                             <p class="description"><?php _e('Allow non-logged-in users to use REST API', 'jsearch'); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="advanced_rate_limit"><?php _e('Rate Limit (requests/minute)', 'jsearch'); ?></label>
-                        </th>
-                        <td>
-                            <input type="number" name="advanced_rate_limit" id="advanced_rate_limit" value="<?php echo esc_attr(PDFS_Settings::get('advanced.rate_limit')); ?>" min="0" max="1000">
-                            <p class="description"><?php _e('0 to disable', 'jsearch'); ?></p>
                         </td>
                     </tr>
                     <tr>
