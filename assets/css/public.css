@@ -20,9 +20,9 @@
 /* Main Wrapper */
 #jsearch.jsearch-wrapper {
     width: 100%;
-    margin: 40px 0;
-    padding: 32px 24px 60px;
-    background: #f7f9fc;
+    margin: 0;
+    padding: 12px;
+    /* background: #f7f9fc; */
     box-sizing: border-box;
 }
 
@@ -468,6 +468,7 @@
     justify-content: center;
     gap: 8px;
     margin-top: 40px;
+    margin-bottom: 20px;
     padding-top: 24px;
     border-top: 1px solid rgba(148, 163, 184, 0.3);
 }
@@ -517,8 +518,8 @@
 /* Responsive */
 @media screen and (max-width: 768px) {
     #jsearch.jsearch-wrapper {
-        padding: 24px 16px 40px;
-        margin: 20px 0;
+        padding: 12px;
+        margin: 0;
     }
 
     #jsearch .jsearch-search-box {
@@ -584,7 +585,7 @@
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     #jsearch.jsearch-wrapper {
-        background: #f7f9fc;
+        /* background: #f7f9fc; */
         color: #111827;
     }
 

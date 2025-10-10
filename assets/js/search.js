@@ -216,7 +216,7 @@
             let html = '';
 
             // Previous button
-            html += '<button type="button" class="pagination-button" data-page="' + (currentPage - 1) + '" ' + (currentPage === 1 ? 'disabled' : '') + '>« Previous</button>';
+            html += '<button type="button" class="pagination-button" data-page="' + (currentPage - 1) + '" ' + (currentPage === 1 ? 'disabled' : '') + '>« </button>';
 
             // Page numbers
             const maxVisible = 5;
@@ -247,7 +247,7 @@
             }
 
             // Next button
-            html += '<button type="button" class="pagination-button" data-page="' + (currentPage + 1) + '" ' + (currentPage === totalPages ? 'disabled' : '') + '>Next »</button>';
+            html += '<button type="button" class="pagination-button" data-page="' + (currentPage + 1) + '" ' + (currentPage === totalPages ? 'disabled' : '') + '> »</button>';
 
             $('#jsearch-pagination').html(html).show();
 
