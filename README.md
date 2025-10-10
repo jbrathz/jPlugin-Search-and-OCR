@@ -6,30 +6,47 @@
 
 ปลั๊กอิน WordPress สำหรับค้นหาเนื้อหาแบบเต็มรูปแบบในบทความ หน้าเพจ และไฟล์ PDF พร้อมรองรับ OCR
 
-> **ต้องมี OCR API**
-> OCR API Repository → [TBA]
+---
 
+## รายละเอียดเวอร์ชั่น
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#)
+
+- รองรับ WordPress Media OCR
+- 3 โหมด OCR (Google Drive File, Google Drive Folder, WordPress Media)
+- OCR อัตโนมัติจาก 4 แหล่ง
+- อัปโหลดไฟล์ไปยัง OCR API โดยตรง
+- ค้นหาแบบ global (รวมบทความและหน้าเพจทั้งหมด)
+- ระบบบันทึกที่ปรับปรุงแล้ว
+- ค้นหาแบบเต็มรูปแบบใน PDF และเนื้อหา WordPress
+- ประมวลผลเป็นชุดพร้อมหยุด/ทำงานต่อ
+- REST API
+- Dashboard สำหรับผู้ดูแลระบบ
+
+---
+
+> ### ต้องมี OCR API 
+> เลือกใช้งาน OCR API → [![OCR API](https://img.shields.io/badge/OCR_API-1.0-blue.svg)](https://github.com/jbrathz)
+>
+>หรือพัฒนาเพิ่มเติม (Code สำหรับเรียกใช้ OCR อยู่ที่ includes/class-ocr-service.php)
+>
 ---
 
 ## Screenshots
 
-<details>
-<summary>Manual OCR - จัดการงาน OCR และประมวลผลไฟล์</summary>
+### ตัวอย่างหน้า Manual OCR - จัดการงาน OCR และประมวลผลไฟล์
 
 ![Manual OCR Page](screenshot-manual-ocr.png)
 
-หน้าจัดการ OCR แบบ Manual:
 - ตารางแสดง Active Jobs (งานที่กำลังทำ)
 - สถานะงาน: COMPLETED, PAUSED พร้อม progress (%)
 - ปุ่ม Continue/Cancel สำหรับควบคุมงาน
 - 3 โหมด OCR: Google Drive File, Google Drive Folder, WordPress Media
 - แสดง Job ID และเวลาที่สร้างงาน
 
-</details>
-
 ---
 
-## ความสามารถหลัก
+## ความสามารถหลักของ Plugin
 
 ### การค้นหา
 - ค้นหาแบบเต็มรูปแบบในเนื้อหา PDF, บทความ และหน้าเพจ
@@ -56,7 +73,7 @@
 ### OCR อัตโนมัติ
 > เลือกเปิด / ปิด ได้ที่ Settings → Automation
 
-ตรวจจับและประมวลผล PDF อัตโนมัติเมื่อบันทึกบทความจาก:
+OCR อัตโนมัติ จะตรวจจับและประมวลผล PDF อัตโนมัติเมื่อบันทึกบทความจาก:
 - URL ของ Google Drive
 - การฝัง Google Drive (embeds/iframes)
 - ไฟล์ PDF แนบ
@@ -64,14 +81,13 @@
 
 ---
 
-## ความต้องการของระบบ
+## ความต้องการขั้นต่ำ
 
 | ระบบ | เวอร์ชันขั้นต่ำ |
 |------|----------------|
 | WordPress | 5.0+ |
 | PHP | 7.4+ |
 | MySQL | 5.6+ |
-| Python OCR API Service | สำหรับ PDF ที่เป็นภาพสแกน |
 
 ---
 
@@ -105,8 +121,7 @@ jSearch → Settings → API
 
 ### REST API
 
-<details>
-<summary>ตัวอย่าง API Endpoints</summary>
+#### ตัวอย่าง API Endpoints
 
 **ค้นหา:**
 ```http
@@ -118,18 +133,13 @@ GET /wp-json/jsearch/v1/query?q=คำค้นหา&limit=10&offset=0
 GET /wp-json/jsearch/v1/stats
 ```
 
-ดูเอกสาร REST API เพิ่มเติมได้ที่ Settings → Usage
-
-</details>
-
 ---
 
 ## ตารางฐานข้อมูล
 
-<details>
-<summary>โครงสร้างฐานข้อมูล</summary>
+### โครงสร้างฐานข้อมูล (ตัวอย่าง)
 
-### `wp_jsearch_pdf_index`
+#### `wp_jsearch_pdf_index`
 เก็บเนื้อหา PDF และข้อมูลเมตา
 
 | คอลัมน์ | คำอธิบาย |
@@ -139,7 +149,7 @@ GET /wp-json/jsearch/v1/stats
 | `post_id` | เชื่อมโยงกับบทความ WordPress |
 | `folder_id` | หมวดหมู่ |
 
-### `wp_jsearch_jobs`
+#### `wp_jsearch_jobs`
 จัดการงาน OCR
 
 | สถานะ | คำอธิบาย |
@@ -148,13 +158,11 @@ GET /wp-json/jsearch/v1/stats
 | `paused` | หยุดชั่วคราว |
 | `completed` | เสร็จสิ้น (ลบอัตโนมัติหลัง 1 ชั่วโมง) |
 
-### `wp_jsearch_job_batches`
+#### `wp_jsearch_job_batches`
 แบ่งงานเป็นชุด (5 ไฟล์ต่อชุด)
 
-### `wp_jsearch_folders`
-จัดการหมวดหมู่โฟลเดอร์ Google Drive
-
-</details>
+#### `wp_jsearch_folders`
+หมวดหมู่โฟลเดอร์ Google Drive (Custom ชื่อเองได้)
 
 ---
 
@@ -181,80 +189,53 @@ GET /wp-json/jsearch/v1/stats
 
 ## การแก้ปัญหาเบื้องต้น
 
-<details>
-<summary>REST API ขึ้น 404</summary>
+### REST API ขึ้น 404
 
 1. ไปที่ Settings → Permalinks แล้วคลิก "Save Changes"
 2. ตรวจสอบที่ jSearch → REST API Debug
 
-</details>
-
-<details>
-<summary>OCR ไม่ทำงาน</summary>
+### OCR ไม่ทำงาน
 
 1. ตรวจสอบการตั้งค่า API ที่ jSearch → Settings → API
 2. ทดสอบการเชื่อมต่อ
 3. เปิด Debug Mode และตรวจสอบ log ที่ `/wp-content/uploads/jsearch/jsearch.log`
 
-</details>
-
-<details>
-<summary>ค้นหาแล้วไม่มีผลลัพธ์</summary>
+### ค้นหาแล้วไม่มีผลลัพธ์
 
 1. ตรวจสอบข้อมูลที่ Dashboard
 2. ตรวจสอบหน้าที่ไม่รวมในการค้นหาที่ Settings
 3. เปิด "Include All Posts/Pages" ถ้าต้องการ
 4. ล้างแคชการค้นหา
 
-</details>
-
-<details>
-<summary>งานหยุดชั่วคราว</summary>
+### งานหยุดชั่วคราว
 
 1. กลับไปที่ jSearch → Manual OCR
 2. ดูตาราง Active Jobs
 3. คลิก "Continue" เพื่อทำงานต่อจากจุดเดิม
 
-</details>
-
 ---
 
-## FAQ
+## ถาม-ตอบ
 
-<details>
-<summary>ต้องมี OCR service หรือไม่?</summary>
+### ต้องมี OCR service หรือไม่?
 
 ไม่จำเป็น แต่ต้องมีสำหรับ PDF ที่เป็นภาพสแกน
 
-</details>
-
-<details>
-<summary>การประมวลผลเป็นชุดจะทำ OCR ไฟล์ซ้ำไหม?</summary>
+### การประมวลผลเป็นชุดจะทำ OCR ไฟล์ซ้ำไหม?
 
 ไม่ ระบบตรวจสอบฐานข้อมูลก่อนประมวลผลแต่ละไฟล์และข้ามไฟล์ที่ทำแล้วอัตโนมัติ
 
-</details>
-
-<details>
-<summary>ถ้าออกจากหน้าตอนกำลัง OCR จะเป็นยังไง?</summary>
+### ถ้าออกจากหน้าตอนกำลัง OCR จะเป็นยังไง?
 
 งานจะหยุดอัตโนมัติ กลับมาแล้วคลิก "Continue" เพื่อทำงานต่อจากจุดเดิม
 
-</details>
-
-<details>
-<summary>หยุดและทำงานต่อได้ไหม?</summary>
+### หยุดและทำงานต่อได้ไหม?
 
 ได้ทุกโหมด เมื่อหยุด ระบบจะรอให้ชุดปัจจุบัน (5 ไฟล์) เสร็จก่อน
 
-</details>
-
-<details>
-<summary>งานที่เสร็จแล้วจะหายไปไหม?</summary>
+### งานที่เสร็จแล้วจะหายไปไหม?
 
 งานที่มีสถานะ `completed` จะถูกลบอัตโนมัติหลัง 1 ชั่วโมง แต่ข้อมูล PDF ที่ทำ OCR แล้วยังคงอยู่ในฐานข้อมูลและไม่ได้รับผลกระทบ
-
-</details>
 
 ---
 
@@ -287,29 +268,6 @@ git push origin feature/awesome-feature
 
 # เปิด Pull Request
 ```
-
----
-
-## ประวัติการเปลี่ยนแปลง
-
-**Version 1.0.0**
-
-- รองรับ WordPress Media OCR
-- 3 โหมด OCR (Google Drive File, Google Drive Folder, WordPress Media)
-- OCR อัตโนมัติจาก 4 แหล่ง
-- อัปโหลดไฟล์ไปยัง OCR API โดยตรง
-- ค้นหาแบบ global (รวมบทความและหน้าเพจทั้งหมด)
-- ระบบบันทึกที่ปรับปรุงแล้ว
-- ค้นหาแบบเต็มรูปแบบใน PDF และเนื้อหา WordPress
-- ประมวลผลเป็นชุดพร้อมหยุด/ทำงานต่อ
-- REST API
-- Dashboard สำหรับผู้ดูแลระบบ
-
----
-
-## License
-
-GPL v2 or later
 
 ---
 
