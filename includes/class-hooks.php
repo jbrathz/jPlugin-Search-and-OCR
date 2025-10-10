@@ -100,7 +100,7 @@ class PDFS_Hooks {
             }
         }
 
-        // Source 3 & 4: PDF Attachments + Local PDF Embeds
+        // Source 3 & 4: PDF Attachments + Local PDF URLs
         if (PDFS_Settings::get('automation.detect_attachments', true)) {
             $all_attachment_ids = array();
 
@@ -110,8 +110,8 @@ class PDFS_Hooks {
                 $all_attachment_ids = array_merge($all_attachment_ids, $pdf_attachments);
             }
 
-            // 3.2: Local PDF Embeds/iframes
-            $local_pdf_urls = $this->extract_local_pdf_embeds($content);
+            // 3.2: Local PDF URLs (from all sources: <a href>, <iframe>, plain URLs)
+            $local_pdf_urls = $this->extract_local_pdf_urls($content);
             if (!empty($local_pdf_urls)) {
                 foreach ($local_pdf_urls as $url) {
                     $attachment_id = $this->url_to_attachment_id($url);
@@ -125,11 +125,11 @@ class PDFS_Hooks {
             $all_attachment_ids = array_unique($all_attachment_ids);
 
             if (!empty($all_attachment_ids)) {
-                PDFS_Logger::info('Auto OCR: Detected PDF attachments + local embeds', array(
+                PDFS_Logger::info('Auto OCR: Detected PDF attachments + local URLs', array(
                     'post_id' => $post_id,
                     'total' => count($all_attachment_ids),
                     'from_attachments' => count($pdf_attachments),
-                    'from_local_embeds' => count($local_pdf_urls),
+                    'from_local_urls' => count($local_pdf_urls),
                 ));
 
                 // OCR each PDF
@@ -187,14 +187,42 @@ class PDFS_Hooks {
     /**
      * Extract Google Drive File IDs from URLs in content
      *
+     * Supports all Google Drive URL formats:
+     * - /file/d/{id}/view
+     * - /file/d/{id}/preview
+     * - /file/d/{id}/edit
+     * - /open?id={id}
+     * - /uc?id={id}
+     * - /uc?export=download&id={id}
+     *
      * @param string $content Post content
      * @return array Array of file IDs
      */
     private function extract_drive_file_ids($content) {
-        $pattern = '/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/';
-        preg_match_all($pattern, $content, $matches);
+        $file_ids = array();
 
-        return array_unique($matches[1]);
+        // Pattern 1: /file/d/{id}
+        $pattern1 = '/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/';
+        preg_match_all($pattern1, $content, $matches1);
+        if (!empty($matches1[1])) {
+            $file_ids = array_merge($file_ids, $matches1[1]);
+        }
+
+        // Pattern 2: /open?id={id} or ?id={id}
+        $pattern2 = '/drive\.google\.com\/open\?[^"\']*id=([a-zA-Z0-9_-]+)/';
+        preg_match_all($pattern2, $content, $matches2);
+        if (!empty($matches2[1])) {
+            $file_ids = array_merge($file_ids, $matches2[1]);
+        }
+
+        // Pattern 3: /uc?id={id} or /uc?export=download&id={id}
+        $pattern3 = '/drive\.google\.com\/uc\?[^"\']*id=([a-zA-Z0-9_-]+)/';
+        preg_match_all($pattern3, $content, $matches3);
+        if (!empty($matches3[1])) {
+            $file_ids = array_merge($file_ids, $matches3[1]);
+        }
+
+        return array_unique($file_ids);
     }
 
     /**
@@ -242,30 +270,49 @@ class PDFS_Hooks {
     }
 
     /**
-     * Extract Local PDF URLs from embeds/iframes (non-Google Drive)
+     * Extract Local PDF URLs from all sources (non-Google Drive)
      *
-     * รองรับ PDF จาก WordPress uploads directory
-     * Pattern: <iframe src="http://yoursite.com/wp-content/uploads/.../file.pdf">
+     * Detects PDF URLs from:
+     * 1. <a href="...pdf">
+     * 2. <iframe src="...pdf">
+     * 3. Plain URLs in content (http://site.com/...pdf)
      *
      * @param string $content Post content
      * @return array Array of PDF URLs
      */
-    private function extract_local_pdf_embeds($content) {
-        // Pattern สำหรับ iframe ที่มี src เป็น .pdf
-        $pattern = '/<iframe[^>]*src=["\']([^"\']*\.pdf[^"\']*)["\']/i';
-        preg_match_all($pattern, $content, $matches);
-
+    private function extract_local_pdf_urls($content) {
         $pdf_urls = array();
-        if (!empty($matches[1])) {
-            foreach ($matches[1] as $url) {
-                // ตรวจสอบว่าเป็น URL local (ไม่ใช่ Google Drive)
-                if (strpos($url, 'drive.google.com') === false) {
-                    $pdf_urls[] = $url;
-                }
+
+        // Pattern 1: <a href="...pdf">
+        $pattern_link = '/<a[^>]*href=["\']([^"\']*\.pdf[^"\']*)["\']/i';
+        preg_match_all($pattern_link, $content, $matches_link);
+        if (!empty($matches_link[1])) {
+            $pdf_urls = array_merge($pdf_urls, $matches_link[1]);
+        }
+
+        // Pattern 2: <iframe src="...pdf">
+        $pattern_iframe = '/<iframe[^>]*src=["\']([^"\']*\.pdf[^"\']*)["\']/i';
+        preg_match_all($pattern_iframe, $content, $matches_iframe);
+        if (!empty($matches_iframe[1])) {
+            $pdf_urls = array_merge($pdf_urls, $matches_iframe[1]);
+        }
+
+        // Pattern 3: Plain URLs (https?://...pdf)
+        $pattern_plain = '/https?:\/\/[^\s<>"]+\.pdf(?:\?[^\s<>"]*)?/i';
+        preg_match_all($pattern_plain, $content, $matches_plain);
+        if (!empty($matches_plain[0])) {
+            $pdf_urls = array_merge($pdf_urls, $matches_plain[0]);
+        }
+
+        // Filter out Google Drive URLs
+        $local_urls = array();
+        foreach ($pdf_urls as $url) {
+            if (strpos($url, 'drive.google.com') === false) {
+                $local_urls[] = $url;
             }
         }
 
-        return array_unique($pdf_urls);
+        return array_unique($local_urls);
     }
 
     /**
