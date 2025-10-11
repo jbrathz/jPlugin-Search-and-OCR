@@ -216,7 +216,7 @@
             let html = '';
 
             // Previous button
-            html += '<button type="button" class="pagination-button" data-page="' + (currentPage - 1) + '" ' + (currentPage === 1 ? 'disabled' : '') + '>« </button>';
+            html += '<button type="button" class="jsearch-pagination-button" data-page="' + (currentPage - 1) + '" ' + (currentPage === 1 ? 'disabled' : '') + '>« </button>';
 
             // Page numbers
             const maxVisible = 5;
@@ -228,31 +228,31 @@
             }
 
             if (startPage > 1) {
-                html += '<button type="button" class="pagination-button" data-page="1">1</button>';
+                html += '<button type="button" class="jsearch-pagination-button" data-page="1">1</button>';
                 if (startPage > 2) {
-                    html += '<span class="pagination-dots">...</span>';
+                    html += '<span class="jsearch-pagination-dots">...</span>';
                 }
             }
 
             for (let i = startPage; i <= endPage; i++) {
                 const activeClass = i === currentPage ? ' active' : '';
-                html += '<button type="button" class="pagination-button' + activeClass + '" data-page="' + i + '">' + i + '</button>';
+                html += '<button type="button" class="jsearch-pagination-button' + activeClass + '" data-page="' + i + '">' + i + '</button>';
             }
 
             if (endPage < totalPages) {
                 if (endPage < totalPages - 1) {
-                    html += '<span class="pagination-dots">...</span>';
+                    html += '<span class="jsearch-pagination-dots">...</span>';
                 }
-                html += '<button type="button" class="pagination-button" data-page="' + totalPages + '">' + totalPages + '</button>';
+                html += '<button type="button" class="jsearch-pagination-button" data-page="' + totalPages + '">' + totalPages + '</button>';
             }
 
             // Next button
-            html += '<button type="button" class="pagination-button" data-page="' + (currentPage + 1) + '" ' + (currentPage === totalPages ? 'disabled' : '') + '> »</button>';
+            html += '<button type="button" class="jsearch-pagination-button" data-page="' + (currentPage + 1) + '" ' + (currentPage === totalPages ? 'disabled' : '') + '> »</button>';
 
             $('#jsearch-pagination').html(html).show();
 
             // Bind click events
-            $('.pagination-button').on('click', function() {
+            $('.jsearch-pagination-button').on('click', function() {
                 const page = parseInt($(this).data('page'));
                 if (!isNaN(page) && page !== currentPage) {
                     scrollToSearch(true);
