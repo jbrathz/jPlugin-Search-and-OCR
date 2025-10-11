@@ -367,6 +367,279 @@ class PDFS_Database {
     }
 
     /**
+     * Search (Public - Frontend only)
+     * Only returns PDFs with associated posts
+     *
+     * @param string $query
+     * @param array $args
+     * @return array
+     */
+    public static function search_public($query, $args = array()) {
+        global $wpdb;
+        $table = self::get_table_name();
+
+        $defaults = array(
+            'limit' => 10,
+            'offset' => 0,
+            'orderby' => 'relevance',
+            'order' => 'DESC',
+            'folder_id' => null,
+        );
+
+        $args = wp_parse_args($args, $defaults);
+
+        $query = sanitize_text_field($query);
+        $limit = absint($args['limit']);
+        $offset = absint($args['offset']);
+
+        $search_like = '%' . $wpdb->esc_like($query) . '%';
+
+        $where = "WHERE (pdf_title LIKE %s OR post_title LIKE %s OR content LIKE %s)";
+        $where_params = array($search_like, $search_like, $search_like);
+
+        // Only show results that have associated posts (for frontend)
+        $where .= " AND post_id IS NOT NULL AND post_id > 0";
+
+        if (!empty($args['folder_id'])) {
+            $where .= " AND folder_id = %s";
+            $where_params[] = sanitize_text_field($args['folder_id']);
+        }
+
+        $sql = $wpdb->prepare(
+            "SELECT
+                t.*,
+                CASE
+                    WHEN t.file_id LIKE 'media_%%' THEN 'media'
+                    ELSE 'pdf'
+                END as source_type,
+                0 AS relevance
+             FROM {$table} t
+             {$where}
+             ORDER BY t.last_updated DESC
+             LIMIT %d OFFSET %d",
+            array_merge($where_params, array($limit, $offset))
+        );
+
+        return $wpdb->get_results($sql);
+    }
+
+    /**
+     * Count search results (Public - Frontend only)
+     * Only counts PDFs with associated posts
+     *
+     * @param string $query
+     * @param array $args
+     * @return int
+     */
+    public static function count_search_public($query, $args = array()) {
+        global $wpdb;
+        $table = self::get_table_name();
+
+        $defaults = array(
+            'folder_id' => null,
+        );
+
+        $args = wp_parse_args($args, $defaults);
+
+        $query = sanitize_text_field($query);
+        $search_like = '%' . $wpdb->esc_like($query) . '%';
+
+        $where = "WHERE (pdf_title LIKE %s OR post_title LIKE %s OR content LIKE %s)";
+        $where_params = array($search_like, $search_like, $search_like);
+
+        // Only count results that have associated posts (for frontend)
+        $where .= " AND post_id IS NOT NULL AND post_id > 0";
+
+        if (!empty($args['folder_id'])) {
+            $where .= " AND folder_id = %s";
+            $where_params[] = sanitize_text_field($args['folder_id']);
+        }
+
+        $sql = $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table} {$where}",
+            $where_params
+        );
+
+        return (int) $wpdb->get_var($sql);
+    }
+
+    /**
+     * Global Search (Public - Frontend only)
+     * Only returns PDFs with associated posts + WordPress posts
+     *
+     * @param string $query
+     * @param array $args
+     * @return array
+     */
+    public static function search_global_public($query, $args = array()) {
+        global $wpdb;
+        $table = self::get_table_name();
+
+        $defaults = array(
+            'limit' => 10,
+            'offset' => 0,
+            'folder_id' => null,
+        );
+
+        $args = wp_parse_args($args, $defaults);
+        $query = sanitize_text_field($query);
+        $limit = absint($args['limit']);
+        $offset = absint($args['offset']);
+
+        $search_like = '%' . $wpdb->esc_like($query) . '%';
+
+        // Folder filter
+        $folder_where = '';
+        if (!empty($args['folder_id'])) {
+            $folder_where = $wpdb->prepare(" AND folder_id = %s", sanitize_text_field($args['folder_id']));
+        }
+
+        // PDF search - only those with associated posts (for frontend)
+        $pdf_sql = $wpdb->prepare(
+            "SELECT
+                CASE
+                    WHEN file_id LIKE 'media_%%' THEN 'media'
+                    ELSE 'pdf'
+                END as source_type,
+                id,
+                post_id,
+                file_id,
+                post_title COLLATE utf8mb4_unicode_ci as post_title,
+                post_url COLLATE utf8mb4_unicode_ci as post_url,
+                pdf_title COLLATE utf8mb4_unicode_ci as title,
+                pdf_url COLLATE utf8mb4_unicode_ci as url,
+                content COLLATE utf8mb4_unicode_ci as content,
+                last_updated as date_modified,
+                0 AS relevance
+            FROM {$table}
+            WHERE (pdf_title LIKE %s OR post_title LIKE %s OR content LIKE %s)
+            AND post_id IS NOT NULL AND post_id > 0{$folder_where}",
+            $search_like,
+            $search_like,
+            $search_like
+        );
+
+        // Get excluded pages
+        $excluded_pages = PDFS_Settings::get('search.exclude_pages', array());
+        $exclude_where = '';
+        if (!empty($excluded_pages) && is_array($excluded_pages)) {
+            $exclude_ids = array_map('absint', $excluded_pages);
+            if (!empty($exclude_ids)) {
+                $placeholders = implode(',', array_fill(0, count($exclude_ids), '%d'));
+                $exclude_where = $wpdb->prepare(" AND ID NOT IN ($placeholders)", $exclude_ids);
+            }
+        }
+
+        // WordPress posts search
+        $posts_sql = $wpdb->prepare(
+            "SELECT
+                'post' as source_type,
+                ID as id,
+                ID as post_id,
+                NULL as file_id,
+                post_title COLLATE utf8mb4_unicode_ci as post_title,
+                CONCAT(%s, '?p=', ID) COLLATE utf8mb4_unicode_ci as post_url,
+                post_title COLLATE utf8mb4_unicode_ci as title,
+                CONCAT(%s, '?p=', ID) COLLATE utf8mb4_unicode_ci as url,
+                post_content COLLATE utf8mb4_unicode_ci as content,
+                post_modified as date_modified,
+                0 AS relevance
+            FROM {$wpdb->posts}
+            WHERE post_status = 'publish'
+            AND post_type IN ('post', 'page')
+            AND (post_title LIKE %s OR post_content LIKE %s)
+            AND ID NOT IN (SELECT DISTINCT post_id FROM {$table} WHERE post_id IS NOT NULL){$exclude_where}",
+            home_url('/'),
+            home_url('/'),
+            $search_like,
+            $search_like
+        );
+
+        // Combine and execute
+        $sql = "
+            SELECT * FROM (
+                ({$pdf_sql})
+                UNION ALL
+                ({$posts_sql})
+            ) AS combined_results
+            ORDER BY date_modified DESC
+            LIMIT {$limit} OFFSET {$offset}
+        ";
+
+        return $wpdb->get_results($sql);
+    }
+
+    /**
+     * Count results for global search (Public - Frontend only)
+     * Only counts PDFs with associated posts + WordPress posts
+     *
+     * @param string $query
+     * @param array $args
+     * @return int
+     */
+    public static function count_search_global_public($query, $args = array()) {
+        global $wpdb;
+        $table = self::get_table_name();
+
+        $defaults = array(
+            'folder_id' => null,
+        );
+
+        $args = wp_parse_args($args, $defaults);
+        $query = sanitize_text_field($query);
+
+        $search_like = '%' . $wpdb->esc_like($query) . '%';
+
+        // Folder filter for PDF table
+        $folder_where = '';
+        if (!empty($args['folder_id'])) {
+            $folder_where = $wpdb->prepare(" AND folder_id = %s", sanitize_text_field($args['folder_id']));
+        }
+
+        // Count PDFs - only those with associated posts (for frontend)
+        $pdf_count_sql = $wpdb->prepare(
+            "SELECT COUNT(*)
+             FROM {$table}
+             WHERE (pdf_title LIKE %s OR post_title LIKE %s OR content LIKE %s)
+             AND post_id IS NOT NULL AND post_id > 0{$folder_where}",
+            $search_like,
+            $search_like,
+            $search_like
+        );
+
+        $pdf_count = (int) $wpdb->get_var($pdf_count_sql);
+
+        // Get excluded pages for count
+        $excluded_pages = PDFS_Settings::get('search.exclude_pages', array());
+        $exclude_where = '';
+        if (!empty($excluded_pages) && is_array($excluded_pages)) {
+            $exclude_ids = array_map('absint', $excluded_pages);
+            if (!empty($exclude_ids)) {
+                $placeholders = implode(',', array_fill(0, count($exclude_ids), '%d'));
+                $exclude_where = $wpdb->prepare(" AND ID NOT IN ($placeholders)", $exclude_ids);
+            }
+        }
+
+        // Posts count (exclude those linked to PDFs)
+        $posts_count_sql = $wpdb->prepare(
+            "SELECT COUNT(*)
+             FROM {$wpdb->posts}
+             WHERE post_status = 'publish'
+             AND post_type IN ('post', 'page')
+             AND (post_title LIKE %s OR post_content LIKE %s)
+             AND ID NOT IN (
+                SELECT DISTINCT post_id FROM {$table} WHERE post_id IS NOT NULL
+             ){$exclude_where}",
+            $search_like,
+            $search_like
+        );
+
+        $posts_count = (int) $wpdb->get_var($posts_count_sql);
+
+        return $pdf_count + $posts_count;
+    }
+
+    /**
      * Get All
      *
      * @param array $args

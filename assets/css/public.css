@@ -21,7 +21,7 @@
 #jsearch.jsearch-wrapper {
     width: 100%;
     margin: 0;
-    padding: 12px;
+    padding: 0;
     /* background: #f7f9fc; */
     box-sizing: border-box;
 }
@@ -473,7 +473,7 @@
     border-top: 1px solid rgba(148, 163, 184, 0.3);
 }
 
-#jsearch .pagination-button {
+#jsearch .jsearch-pagination-button {
     padding: 10px 18px;
     background: #ffffff;
     border: 1px solid rgba(148, 163, 184, 0.5);
@@ -488,28 +488,28 @@
     box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
 }
 
-#jsearch .pagination-button:hover:not(:disabled) {
+#jsearch .jsearch-pagination-button:hover:not(:disabled) {
     background: #f9fafb;
     border-color: #2563eb;
     color: #2563eb;
     box-shadow: 0 6px 14px rgba(37, 99, 235, 0.18);
 }
 
-#jsearch .pagination-button:disabled {
+#jsearch .jsearch-pagination-button:disabled {
     opacity: 0.45;
     cursor: not-allowed;
     background: #f3f4f6;
 }
 
-#jsearch .pagination-button.active {
-    background: #2563eb;
-    border-color: #2563eb;
-    color: #ffffff;
+#jsearch.jsearch-wrapper #jsearch-pagination .jsearch-pagination-button.active {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
     font-weight: 600;
     box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
 }
 
-#jsearch .pagination-dots {
+#jsearch .jsearch-pagination-dots {
     padding: 10px 8px;
     color: #9ca3af;
     font-weight: 500;
@@ -518,7 +518,7 @@
 /* Responsive */
 @media screen and (max-width: 768px) {
     #jsearch.jsearch-wrapper {
-        padding: 12px;
+        padding: 0;
         margin: 0;
     }
 
@@ -577,7 +577,7 @@
         gap: 8px;
     }
 
-    #jsearch .pagination-button {
+    #jsearch .jsearch-pagination-button {
         padding: 8px 12px;
         font-size: 13px;
     }
@@ -652,7 +652,7 @@
         color: #1f2937;
     }
 
-    #jsearch .pagination-button {
+    #jsearch .jsearch-pagination-button {
         background: #ffffff;
         border-color: rgba(148, 163, 184, 0.5);
         color: #1f2937;
