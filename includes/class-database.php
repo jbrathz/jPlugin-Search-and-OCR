@@ -412,10 +412,12 @@ class PDFS_Database {
                     WHEN t.file_id LIKE 'media_%%' THEN 'media'
                     ELSE 'pdf'
                 END as source_type,
-                0 AS relevance
+                0 AS relevance,
+                p.post_date
              FROM {$table} t
+             LEFT JOIN {$wpdb->posts} p ON t.post_id = p.ID
              {$where}
-             ORDER BY t.last_updated DESC
+             ORDER BY p.post_date DESC
              LIMIT %d OFFSET %d",
             array_merge($where_params, array($limit, $offset))
         );
@@ -498,22 +500,23 @@ class PDFS_Database {
         $pdf_sql = $wpdb->prepare(
             "SELECT
                 CASE
-                    WHEN file_id LIKE 'media_%%' THEN 'media'
+                    WHEN t.file_id LIKE 'media_%%' THEN 'media'
                     ELSE 'pdf'
                 END as source_type,
-                id,
-                post_id,
-                file_id,
-                post_title COLLATE utf8mb4_unicode_ci as post_title,
-                post_url COLLATE utf8mb4_unicode_ci as post_url,
-                pdf_title COLLATE utf8mb4_unicode_ci as title,
-                pdf_url COLLATE utf8mb4_unicode_ci as url,
-                content COLLATE utf8mb4_unicode_ci as content,
-                last_updated as date_modified,
+                t.id,
+                t.post_id,
+                t.file_id,
+                t.post_title COLLATE utf8mb4_unicode_ci as post_title,
+                t.post_url COLLATE utf8mb4_unicode_ci as post_url,
+                t.pdf_title COLLATE utf8mb4_unicode_ci as title,
+                t.pdf_url COLLATE utf8mb4_unicode_ci as url,
+                t.content COLLATE utf8mb4_unicode_ci as content,
+                p.post_date as post_date,
                 0 AS relevance
-            FROM {$table}
-            WHERE (pdf_title LIKE %s OR post_title LIKE %s OR content LIKE %s)
-            AND post_id IS NOT NULL AND post_id > 0{$folder_where}",
+            FROM {$table} t
+            LEFT JOIN {$wpdb->posts} p ON t.post_id = p.ID
+            WHERE (t.pdf_title LIKE %s OR t.post_title LIKE %s OR t.content LIKE %s)
+            AND t.post_id IS NOT NULL AND t.post_id > 0{$folder_where}",
             $search_like,
             $search_like,
             $search_like
@@ -542,7 +545,7 @@ class PDFS_Database {
                 post_title COLLATE utf8mb4_unicode_ci as title,
                 CONCAT(%s, '?p=', ID) COLLATE utf8mb4_unicode_ci as url,
                 post_content COLLATE utf8mb4_unicode_ci as content,
-                post_modified as date_modified,
+                post_date as post_date,
                 0 AS relevance
             FROM {$wpdb->posts}
             WHERE post_status = 'publish'
@@ -562,7 +565,7 @@ class PDFS_Database {
                 UNION ALL
                 ({$posts_sql})
             ) AS combined_results
-            ORDER BY date_modified DESC
+            ORDER BY post_date DESC
             LIMIT {$limit} OFFSET {$offset}
         ";
 
