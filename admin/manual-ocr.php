@@ -85,8 +85,9 @@ $default_folder = PDFS_Folders::get_default();
 
     <div class="jsearch-ocr-tabs">
         <h2 class="nav-tab-wrapper">
-            <a href="#ocr-file" class="nav-tab nav-tab-active"><?php _e('Single File', 'jsearch'); ?></a>
-            <a href="#ocr-folder" class="nav-tab"><?php _e('Entire Folder', 'jsearch'); ?></a>
+            <a href="#ocr-file" class="nav-tab nav-tab-active"><?php _e('Google Drive File', 'jsearch'); ?></a>
+            <a href="#ocr-folder" class="nav-tab"><?php _e('Google Drive Folder', 'jsearch'); ?></a>
+            <a href="#ocr-media" class="nav-tab"><?php _e('WordPress Media', 'jsearch'); ?></a>
         </h2>
 
         <!-- Single File OCR -->
@@ -139,6 +140,39 @@ $default_folder = PDFS_Folders::get_default();
                 </div>
 
                 <?php submit_button(__('Run OCR on Folder', 'jsearch'), 'primary', 'jsearch_ocr'); ?>
+            </form>
+        </div>
+
+        <!-- WordPress Media OCR -->
+        <div id="ocr-media" class="ocr-tab-content">
+            <form class="jsearch-form jsearch-media-form">
+                <div class="notice notice-info inline">
+                    <p><?php _e('Scan and OCR PDF files from WordPress Media Library.', 'jsearch'); ?></p>
+                </div>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label><?php _e('Filter', 'jsearch'); ?></label>
+                        </th>
+                        <td>
+                            <label style="display: block; margin-bottom: 10px;">
+                                <input type="radio" name="media_filter" value="all" checked>
+                                <?php _e('All PDFs in Media Library', 'jsearch'); ?>
+                            </label>
+                            <label style="display: block;">
+                                <input type="radio" name="media_filter" value="unprocessed">
+                                <?php _e('Unprocessed PDFs only', 'jsearch'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="notice notice-warning inline">
+                    <p><strong><?php _e('Note:', 'jsearch'); ?></strong> <?php _e('This will upload PDF files to the OCR API server for processing.', 'jsearch'); ?></p>
+                </div>
+
+                <?php submit_button(__('Scan & OCR Media PDFs', 'jsearch'), 'primary', 'jsearch_ocr_media'); ?>
             </form>
         </div>
 

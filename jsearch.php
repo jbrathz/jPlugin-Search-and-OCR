@@ -12,6 +12,7 @@
  * Domain Path: /languages
  * Requires at least: 5.0
  * Requires PHP: 7.4
+ * Update URI: false
  */
 
 // ป้องกันการเข้าถึงไฟล์โดยตรง

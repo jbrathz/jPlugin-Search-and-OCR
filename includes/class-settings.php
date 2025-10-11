@@ -147,7 +147,6 @@ class PDFS_Settings {
             'advanced' => array(
                 'debug_mode' => false,
                 'public_api' => true,
-                'rate_limit' => 100,
                 'log_retention_days' => 30,
             ),
         );
@@ -199,25 +198,115 @@ class PDFS_Settings {
     /**
      * Encrypt API Key
      *
-     * @param string $key
-     * @return string
+     * Uses AES-256-CBC encryption for secure storage
+     *
+     * @param string $key Plain text API key
+     * @return string Encrypted API key (base64 encoded)
      */
     public static function encrypt_api_key($key) {
+        if (empty($key)) {
+            return '';
+        }
+
+        // Check if OpenSSL extension is available
+        if (!function_exists('openssl_encrypt')) {
+            // Fallback to base64 (less secure, but better than nothing)
+            return base64_encode($key);
+        }
+
+        // Use WordPress AUTH_KEY as encryption key
         if (!defined('AUTH_KEY') || empty(AUTH_KEY)) {
             return base64_encode($key);
         }
-        return base64_encode($key . '|' . AUTH_KEY);
+
+        $cipher = 'AES-256-CBC';
+        $encryption_key = hash('sha256', AUTH_KEY);
+
+        // Generate a random IV (Initialization Vector)
+        $iv_length = openssl_cipher_iv_length($cipher);
+        $iv = openssl_random_pseudo_bytes($iv_length);
+
+        // Encrypt the API key
+        $encrypted = openssl_encrypt($key, $cipher, $encryption_key, 0, $iv);
+
+        if ($encrypted === false) {
+            // Encryption failed, fallback to base64
+            return base64_encode($key);
+        }
+
+        // Combine IV and encrypted data, then base64 encode
+        return base64_encode($iv . '::' . $encrypted);
     }
 
     /**
      * Decrypt API Key
      *
-     * @param string $encrypted
-     * @return string
+     * Supports backward compatibility with old base64-only encryption
+     *
+     * @param string $encrypted Encrypted API key
+     * @return string Decrypted API key
      */
     public static function decrypt_api_key($encrypted) {
-        $decoded = base64_decode($encrypted);
+        if (empty($encrypted)) {
+            return '';
+        }
 
+        $decoded = base64_decode($encrypted, true);
+
+        if ($decoded === false) {
+            // Not valid base64, return as-is
+            return $encrypted;
+        }
+
+        // Check if OpenSSL extension is available
+        if (!function_exists('openssl_decrypt')) {
+            // No OpenSSL, assume old format (base64 only)
+            return self::decrypt_old_format($decoded);
+        }
+
+        // Check if WordPress AUTH_KEY is defined
+        if (!defined('AUTH_KEY') || empty(AUTH_KEY)) {
+            return self::decrypt_old_format($decoded);
+        }
+
+        // Check if this is new format (contains '::' separator)
+        if (strpos($decoded, '::') === false) {
+            // Old format, decrypt using old method
+            return self::decrypt_old_format($decoded);
+        }
+
+        // New format: IV::encrypted_data
+        $parts = explode('::', $decoded, 2);
+
+        if (count($parts) !== 2) {
+            // Invalid format, fallback
+            return self::decrypt_old_format($decoded);
+        }
+
+        list($iv, $encrypted_data) = $parts;
+
+        $cipher = 'AES-256-CBC';
+        $encryption_key = hash('sha256', AUTH_KEY);
+
+        // Decrypt the API key
+        $decrypted = openssl_decrypt($encrypted_data, $cipher, $encryption_key, 0, $iv);
+
+        if ($decrypted === false) {
+            // Decryption failed, fallback
+            return self::decrypt_old_format($decoded);
+        }
+
+        return $decrypted;
+    }
+
+    /**
+     * Decrypt old format API key (backward compatibility)
+     *
+     * @param string $decoded Base64 decoded string
+     * @return string Decrypted API key
+     */
+    private static function decrypt_old_format($decoded) {
+        // Old format: key|AUTH_KEY or just key
         if (!defined('AUTH_KEY') || empty(AUTH_KEY)) {
             return $decoded;
         }
