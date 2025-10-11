@@ -214,9 +214,10 @@ class PDFS_REST_API {
             $search_args['folder_id'] = $folder_id;
         }
 
+        // Use _public functions for frontend (filters post_id automatically)
         $results = $include_all_posts
-            ? PDFS_Database::search_global($query, $search_args)
-            : PDFS_Database::search($query, $search_args);
+            ? PDFS_Database::search_global_public($query, $search_args)
+            : PDFS_Database::search_public($query, $search_args);
 
         $count_args = array();
         if (!empty($folder_id)) {
@@ -224,13 +225,8 @@ class PDFS_REST_API {
         }
 
         $total_results = $include_all_posts
-            ? PDFS_Database::count_search_global($query, $count_args)
-            : PDFS_Database::count_search($query, $count_args);
-
-        // Filter out PDFs without associated posts
-        $filtered_results = array_filter($results, function($item) {
-            return !empty($item->post_id);
-        });
+            ? PDFS_Database::count_search_global_public($query, $count_args)
+            : PDFS_Database::count_search_public($query, $count_args);
 
         // Format results
         $formatted = array_map(function($item) use ($query) {
@@ -258,16 +254,13 @@ class PDFS_REST_API {
                 'folder_name' => isset($item->folder_name) ? $item->folder_name : null,
                 'relevance' => (float) $item->relevance,
             );
-        }, $filtered_results);
-
-        // Re-index array after filtering
-        $formatted = array_values($formatted);
+        }, $results);
 
         $response = array(
             'success' => true,
             'count' => count($formatted),
             'query' => $query,
-            'total' => $total_results,
+            'total' => $total_results, // Use count from database (already filtered)
             'results' => $formatted,
         );
 
