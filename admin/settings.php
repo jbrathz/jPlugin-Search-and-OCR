@@ -17,6 +17,7 @@ if (isset($_POST['jsearch_save_settings']) && check_admin_referer('jsearch_setti
         PDFS_Settings::set('api.timeout', absint($_POST['api_timeout']));
     } elseif ($tab === 'gdrive') {
         PDFS_Settings::set('gdrive.ocr_language', sanitize_text_field($_POST['gdrive_ocr_language']));
+        PDFS_Settings::set('processing.wordpress_media_method', sanitize_text_field($_POST['processing_wordpress_media_method']));
     } elseif ($tab === 'search') {
         PDFS_Settings::set('search.results_per_page', absint($_POST['search_results_per_page']));
         PDFS_Settings::set('search.popular_keywords', sanitize_textarea_field($_POST['search_popular_keywords']));
@@ -297,6 +298,34 @@ $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'usage'
                         <td>
                             <input type="text" name="gdrive_ocr_language" id="gdrive_ocr_language" value="<?php echo esc_attr(PDFS_Settings::get('gdrive.ocr_language')); ?>" class="regular-text">
                             <p class="description"><?php _e('Tesseract language codes (e.g., tha+eng)', 'jsearch'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label><?php _e('WordPress Media Processing', 'jsearch'); ?></label>
+                        </th>
+                        <td>
+                            <?php $current_method = PDFS_Settings::get('processing.wordpress_media_method', 'parser'); ?>
+                            <fieldset>
+                                <label style="display: block; margin-bottom: 10px;">
+                                    <input type="radio" name="processing_wordpress_media_method" value="parser" <?php checked($current_method, 'parser'); ?>>
+                                    <strong><?php _e('Built-in Parser', 'jsearch'); ?></strong>
+                                    <p class="description" style="margin-left: 25px; margin-top: 5px;">
+                                        <?php _e('Extract text directly from digital PDFs (fast, no API required)', 'jsearch'); ?><br>
+                                        <strong><?php _e('Supports:', 'jsearch'); ?></strong> <?php _e('Digital PDFs with text layer only', 'jsearch'); ?><br>
+                                        <strong><?php _e('WordPress Media only', 'jsearch'); ?></strong> - <?php _e('Google Drive always uses OCR API', 'jsearch'); ?>
+                                    </p>
+                                </label>
+                                <label style="display: block;">
+                                    <input type="radio" name="processing_wordpress_media_method" value="api" <?php checked($current_method, 'api'); ?>>
+                                    <strong><?php _e('OCR API', 'jsearch'); ?></strong>
+                                    <p class="description" style="margin-left: 25px; margin-top: 5px;">
+                                        <?php _e('Process via external OCR API (supports scanned PDFs)', 'jsearch'); ?><br>
+                                        <strong><?php _e('Supports:', 'jsearch'); ?></strong> <?php _e('Both digital and scanned PDFs', 'jsearch'); ?><br>
+                                        <strong><?php _e('Requires:', 'jsearch'); ?></strong> <?php _e('API configuration in API tab', 'jsearch'); ?>
+                                    </p>
+                                </label>
+                            </fieldset>
                         </td>
                     </tr>
                 </table>

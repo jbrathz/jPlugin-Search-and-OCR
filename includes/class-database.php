@@ -62,9 +62,9 @@ class PDFS_Database {
             'post_url' => isset($data['post_url']) ? esc_url_raw($data['post_url']) : null,
             'pdf_title' => sanitize_text_field($data['pdf_title']),
             'pdf_url' => esc_url_raw($data['pdf_url']),
-            'content' => wp_kses_post($data['content']),
+            'content' => sanitize_textarea_field($data['content']), // Changed from wp_kses_post to preserve content
             'ocr_method' => isset($data['ocr_method']) ? sanitize_text_field($data['ocr_method']) : null,
-            'char_count' => isset($data['char_count']) ? absint($data['char_count']) : strlen($data['content']),
+            'char_count' => isset($data['char_count']) ? absint($data['char_count']) : mb_strlen($data['content']),
         );
 
         if ($existing) {
@@ -394,14 +394,14 @@ class PDFS_Database {
 
         $search_like = '%' . $wpdb->esc_like($query) . '%';
 
-        $where = "WHERE (pdf_title LIKE %s OR post_title LIKE %s OR content LIKE %s)";
+        $where = "WHERE (t.pdf_title LIKE %s OR t.post_title LIKE %s OR t.content LIKE %s)";
         $where_params = array($search_like, $search_like, $search_like);
 
         // Only show results that have associated posts (for frontend)
-        $where .= " AND post_id IS NOT NULL AND post_id > 0";
+        $where .= " AND t.post_id IS NOT NULL AND t.post_id > 0";
 
         if (!empty($args['folder_id'])) {
-            $where .= " AND folder_id = %s";
+            $where .= " AND t.folder_id = %s";
             $where_params[] = sanitize_text_field($args['folder_id']);
         }
 
@@ -417,7 +417,7 @@ class PDFS_Database {
              FROM {$table} t
              LEFT JOIN {$wpdb->posts} p ON t.post_id = p.ID
              {$where}
-             ORDER BY p.post_date DESC
+             ORDER BY COALESCE(p.post_date, t.last_updated) DESC
              LIMIT %d OFFSET %d",
             array_merge($where_params, array($limit, $offset))
         );
@@ -446,19 +446,21 @@ class PDFS_Database {
         $query = sanitize_text_field($query);
         $search_like = '%' . $wpdb->esc_like($query) . '%';
 
-        $where = "WHERE (pdf_title LIKE %s OR post_title LIKE %s OR content LIKE %s)";
+        $where = "WHERE (t.pdf_title LIKE %s OR t.post_title LIKE %s OR t.content LIKE %s)";
         $where_params = array($search_like, $search_like, $search_like);
 
         // Only count results that have associated posts (for frontend)
-        $where .= " AND post_id IS NOT NULL AND post_id > 0";
+        $where .= " AND t.post_id IS NOT NULL AND t.post_id > 0";
 
         if (!empty($args['folder_id'])) {
-            $where .= " AND folder_id = %s";
+            $where .= " AND t.folder_id = %s";
             $where_params[] = sanitize_text_field($args['folder_id']);
         }
 
         $sql = $wpdb->prepare(
-            "SELECT COUNT(*) FROM {$table} {$where}",
+            "SELECT COUNT(*) FROM {$table} t
+             LEFT JOIN {$wpdb->posts} p ON t.post_id = p.ID
+             {$where}",
             $where_params
         );
 

@@ -92,6 +92,7 @@ class PDF_Search {
         require_once JSEARCH_PLUGIN_DIR . 'includes/class-database.php';
         require_once JSEARCH_PLUGIN_DIR . 'includes/class-folders.php';
         require_once JSEARCH_PLUGIN_DIR . 'includes/class-helper.php';
+        require_once JSEARCH_PLUGIN_DIR . 'includes/class-pdf-parser.php';
         require_once JSEARCH_PLUGIN_DIR . 'includes/class-queue-service.php';
         require_once JSEARCH_PLUGIN_DIR . 'includes/class-ocr-service.php';
         require_once JSEARCH_PLUGIN_DIR . 'includes/class-rate-limiter.php';
