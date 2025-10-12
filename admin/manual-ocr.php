@@ -11,6 +11,10 @@ if (!defined('ABSPATH')) exit;
 // Get folders for dropdown
 $folders = PDFS_Folders::get_all();
 $default_folder = PDFS_Folders::get_default();
+
+// เช็ค processing method
+$processing_method = PDFS_Settings::get('processing.wordpress_media_method', 'parser');
+$is_parser_mode = ($processing_method === 'parser');
 ?>
 
 <div class="wrap jsearch-ocr">
@@ -85,12 +89,25 @@ $default_folder = PDFS_Folders::get_default();
 
     <div class="jsearch-ocr-tabs">
         <h2 class="nav-tab-wrapper">
-            <a href="#ocr-file" class="nav-tab nav-tab-active"><?php _e('Google Drive File', 'jsearch'); ?></a>
-            <a href="#ocr-folder" class="nav-tab"><?php _e('Google Drive Folder', 'jsearch'); ?></a>
-            <a href="#ocr-media" class="nav-tab"><?php _e('WordPress Media', 'jsearch'); ?></a>
+            <?php if (!$is_parser_mode): ?>
+                <a href="#ocr-file" class="nav-tab nav-tab-active"><?php _e('Google Drive File', 'jsearch'); ?></a>
+                <a href="#ocr-folder" class="nav-tab"><?php _e('Google Drive Folder', 'jsearch'); ?></a>
+            <?php endif; ?>
+            <a href="#ocr-media" class="nav-tab <?php echo $is_parser_mode ? 'nav-tab-active' : ''; ?>"><?php _e('WordPress Media', 'jsearch'); ?></a>
         </h2>
 
+        <?php if ($is_parser_mode): ?>
+            <div class="notice notice-info inline" style="margin-top: 15px;">
+                <p>
+                    <strong><?php _e('Built-in Parser Mode:', 'jsearch'); ?></strong>
+                    <?php _e('Only WordPress Media is available. Google Drive processing requires OCR API mode.', 'jsearch'); ?><br>
+                    <?php _e('To enable Google Drive processing, go to', 'jsearch'); ?> <a href="?page=jsearch-settings&tab=gdrive"><?php _e('Settings → OCR Settings', 'jsearch'); ?></a> <?php _e('and select "OCR API".', 'jsearch'); ?>
+                </p>
+            </div>
+        <?php endif; ?>
+
         <!-- Single File OCR -->
+        <?php if (!$is_parser_mode): ?>
         <div id="ocr-file" class="ocr-tab-content">
             <form class="jsearch-form">
 
@@ -142,6 +159,7 @@ $default_folder = PDFS_Folders::get_default();
                 <?php submit_button(__('Run OCR on Folder', 'jsearch'), 'primary', 'jsearch_ocr'); ?>
             </form>
         </div>
+        <?php endif; ?>
 
         <!-- WordPress Media OCR -->
         <div id="ocr-media" class="ocr-tab-content">
@@ -450,4 +468,16 @@ $default_folder = PDFS_Folders::get_default();
         margin-top: 10px;
         margin-right: 10px;
     }
+
+    /* Tab Content Display */
+    .ocr-tab-content {
+        display: none;
+    }
+
+    <?php if ($is_parser_mode): ?>
+    /* Force WordPress Media tab to show in Parser Mode */
+    #ocr-media.ocr-tab-content {
+        display: block !important;
+    }
+    <?php endif; ?>
 </style>

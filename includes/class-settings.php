@@ -124,6 +124,9 @@ class PDFS_Settings {
         $default = array(
             'api' => array('url' => 'http://localhost:8000', 'key' => '', 'timeout' => 30),
             'gdrive' => array('folder_id' => '', 'ocr_language' => 'tha+eng'),
+            'processing' => array(
+                'wordpress_media_method' => 'parser', // 'parser' or 'api'
+            ),
             'search' => array(
                 'results_per_page' => 10,
                 'popular_keywords' => array(),

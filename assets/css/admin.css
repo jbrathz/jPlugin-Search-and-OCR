@@ -99,6 +99,12 @@
     border: 1px solid #ffeaa7;
 }
 
+.badge-parser {
+    background: #e9ecef;
+    color: #495057;
+    border: 1px solid #ced4da;
+}
+
 .jsearch-table .button-small {
     padding: 2px 8px;
     font-size: 12px;
