@@ -205,6 +205,14 @@ class PDFS_REST_API {
         // Check if include all posts/pages is enabled
         $include_all_posts = PDFS_Settings::get('search.include_all_posts', false);
 
+        // Debug log
+        PDFS_Logger::debug('REST API Search', array(
+            'query' => $query,
+            'include_all_posts' => $include_all_posts,
+            'limit' => $limit,
+            'offset' => $offset,
+        ));
+
         // Check cache
         $cache_key = 'jsearch_query_v2_' . md5($query . $limit . $offset . $folder_id . ($include_all_posts ? '1' : '0'));
         $cached = get_transient($cache_key);
@@ -227,6 +235,12 @@ class PDFS_REST_API {
         $results = $include_all_posts
             ? PDFS_Database::search_global_public($query, $search_args)
             : PDFS_Database::search_public($query, $search_args);
+
+        // Debug log results
+        PDFS_Logger::debug('REST API Search Results', array(
+            'method' => $include_all_posts ? 'search_global_public' : 'search_public',
+            'result_count' => count($results),
+        ));
 
         $count_args = array();
         if (!empty($folder_id)) {

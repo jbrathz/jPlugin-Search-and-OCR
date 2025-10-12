@@ -45,8 +45,11 @@ class PDFS_Hooks {
         $content = $post->post_content;
         $async_enabled = PDFS_Settings::get('automation.async_processing', true);
 
-        // Source 1 & 2: Google Drive (URLs + Embeds)
-        if (PDFS_Settings::get('automation.detect_gdrive', true)) {
+        // เช็ค processing method ตั้งแต่ต้น
+        $processing_method = PDFS_Settings::get('processing.wordpress_media_method', 'parser');
+
+        // Source 1 & 2: Google Drive (URLs + Embeds) - ทำงานเฉพาะ API mode
+        if ($processing_method === 'api' && PDFS_Settings::get('automation.detect_gdrive', true)) {
             // Extract file IDs from URLs
             $url_file_ids = $this->extract_drive_file_ids($content);
 
@@ -161,8 +164,15 @@ class PDFS_Hooks {
 
                     $filename = basename($file_path);
 
-                    // OCR file upload
-                    $result = $ocr_service->ocr_file_upload($file_path, $filename);
+                    // ใช้ processing method ที่เช็คไว้แล้วตอนต้นฟังก์ชัน
+                    if ($processing_method === 'parser') {
+                        // ใช้ Built-in Parser
+                        $parser = new PDFS_PDF_Parser();
+                        $result = $parser->extract_text($file_path, $filename);
+                    } else {
+                        // ใช้ OCR API
+                        $result = $ocr_service->ocr_file_upload($file_path, $filename);
+                    }
 
                     if (!is_wp_error($result)) {
                         $ocr_service->save_media_result($result, $attachment_id, $post_id);
@@ -171,12 +181,14 @@ class PDFS_Hooks {
                             'attachment_id' => $attachment_id,
                             'post_id' => $post_id,
                             'chars' => $result['char_count'] ?? 0,
+                            'method' => $processing_method,
                         ));
                     } else {
                         PDFS_Logger::error('Auto OCR: PDF failed', array(
                             'attachment_id' => $attachment_id,
                             'post_id' => $post_id,
                             'error' => $result->get_error_message(),
+                            'method' => $processing_method,
                         ));
                     }
                 }

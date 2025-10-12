@@ -521,10 +521,9 @@ class PDFS_Queue_Service {
         $batch_status = ($error_count > 0 && $success_count === 0) ? 'failed' : 'completed';
         self::update_batch_status($batch_id, $batch_status);
 
-        // อัปเดต job progress
-        $processed_total = $success_count + $skipped_count;
+        // อัปเดต job progress - นับเฉพาะ success (ไม่รวม skipped เพื่อป้องกันติดลบใน UI)
         self::update_job($batch->job_id, array(
-            'processed_files' => $job->processed_files + $processed_total,
+            'processed_files' => $job->processed_files + $success_count,
             'failed_files' => $job->failed_files + $error_count,
         ));
 
@@ -893,8 +892,17 @@ class PDFS_Queue_Service {
             // ดึง filename
             $filename = basename($file_path);
 
-            // OCR file upload
-            $result = $ocr_service->ocr_file_upload($file_path, $filename);
+            // เช็ค processing method
+            $processing_method = PDFS_Settings::get('processing.wordpress_media_method', 'parser');
+
+            if ($processing_method === 'parser') {
+                // ใช้ Built-in Parser
+                $parser = new PDFS_PDF_Parser();
+                $result = $parser->extract_text($file_path, $filename);
+            } else {
+                // ใช้ OCR API (default)
+                $result = $ocr_service->ocr_file_upload($file_path, $filename);
+            }
 
             if (is_wp_error($result)) {
                 $error_count++;
@@ -954,10 +962,9 @@ class PDFS_Queue_Service {
         $batch_status = ($error_count > 0 && $success_count === 0) ? 'failed' : 'completed';
         self::update_batch_status($batch_id, $batch_status);
 
-        // อัปเดต job progress
-        $processed_total = $success_count + $skipped_count;
+        // อัปเดต job progress - นับเฉพาะ success (ไม่รวม skipped เพื่อป้องกันติดลบใน UI)
         self::update_job($batch->job_id, array(
-            'processed_files' => $job->processed_files + $processed_total,
+            'processed_files' => $job->processed_files + $success_count,
             'failed_files' => $job->failed_files + $error_count,
         ));
 
