@@ -188,6 +188,15 @@ class PDFS_REST_API {
      * Search
      */
     public static function search($request) {
+        // Rate limiting check
+        if (!PDFS_Rate_Limiter::check_rate_limit()) {
+            return new WP_Error(
+                'rate_limit_exceeded',
+                __('Too many requests. Please try again later.', 'jsearch'),
+                array('status' => 429)
+            );
+        }
+
         $query = $request->get_param('q');
         $limit = min($request->get_param('limit'), 100);
         $offset = $request->get_param('offset');
