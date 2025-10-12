@@ -187,7 +187,53 @@ GET /wp-json/jsearch/v1/stats
 
 ---
 
-## การแก้ปัญหาเบื้องต้น
+## ระบบ Rate Limiting
+
+ปลั๊กอินมีระบบป้องกัน spam และ bot attacks ในตัว แบบง่าย:
+
+### คุณสมบัติ
+- **จำกัด 20 requests ต่อนาที** ต่อ IP address
+- **ใช้ WordPress Transients API** (ไม่ต้องสร้างตารางใหม่)
+- **รองรับ Cloudflare** - ดึง real IP ผ่าน proxy/CDN
+- **ส่ง HTTP 429** (Too Many Requests) เมื่อเกินจำกัด
+- **Auto cleanup** - ข้อมูลหมดอายุอัตโนมัติ
+
+### การทำงาน
+```
+Request → เช็ค IP → นับจำนวน requests
+    ↓
+ถ้า < 20 requests/นาที → อนุญาต
+ถ้า ≥ 20 requests/นาที → บล็อค (HTTP 429)
+```
+
+### การปรับแต่ง
+แก้ไขใน `includes/class-rate-limiter.php`:
+```php
+private static $max_requests = 20;  // จำนวน requests สูงสุด
+private static $time_window = 60;   // ช่วงเวลา (วินาที)
+```
+
+### การเก็บข้อมูลผู้ใช้
+- เก็บใน **`wp_options`** table เป็น transients
+- Key: `_transient_jsearch_rl_{md5_hash_of_ip}`
+- Value: จำนวน requests
+- หมดอายุ: 60 วินาที (auto-delete)
+
+
+### ดูสถานะ Rate Limit
+```php
+$status = PDFS_Rate_Limiter::get_status();
+// Returns: IP, current_requests, max_requests, remaining, time_window
+```
+
+### ล้าง Rate Limit (สำหรับ Admin/Testing)
+```php
+PDFS_Rate_Limiter::clear_rate_limit($ip);
+```
+
+---
+
+## การแก้ปัญหาเบื้องต้นใน Plug in นี้
 
 ### REST API ขึ้น 404
 
