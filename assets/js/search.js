@@ -123,6 +123,8 @@
                 const highlightedPostTitle = highlightText(escapeHtml(item.post_title), query);
                 const highlightedPdfTitle = highlightText(escapeHtml(item.pdf_title), query);
 
+                // Replace post_title_plain (for alt text without highlighting)
+                itemHtml = itemHtml.replace(/\{\{post_title_plain\}\}/g, escapeHtml(item.post_title));
                 itemHtml = itemHtml.replace(/\{\{post_title\}\}/g, highlightedPostTitle);
                 itemHtml = itemHtml.replace(/\{\{post_url\}\}/g, escapeHtml(item.post_url));
                 itemHtml = itemHtml.replace(/\{\{link_target\}\}/g, linkTarget);
