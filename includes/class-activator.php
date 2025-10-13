@@ -154,7 +154,6 @@ class PDFS_Activator {
                 'thumbnail_size' => 'medium',
                 'snippet_length' => 200,
                 'highlight_color' => '#FFFF00',
-                'date_format' => 'Y-m-d H:i:s',
             ),
 
             // Automation

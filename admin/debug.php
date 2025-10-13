@@ -387,26 +387,26 @@ if (!defined('ABSPATH')) exit;
 
         <ul class="troubleshooting-list">
             <li>
-                <strong>REST API returns 404 errors</strong>
+                <strong>REST API returns 404 errors</strong><br>
                 Go to <a href="<?php echo admin_url('options-permalink.php'); ?>">Settings → Permalinks</a> and click "Save Changes" to flush rewrite rules. This re-registers all REST API routes.
             </li>
             <li>
-                <strong>Endpoints return 403 Forbidden</strong>
+                <strong>Endpoints return 403 Forbidden</strong><br>
                 Check your plugin's permission settings. Some endpoints may require user authentication or specific capabilities.
             </li>
             <li>
-                <strong>Endpoints return unexpected errors</strong>
+                <strong>Endpoints return unexpected errors</strong><br>
                 Check your WordPress debug log for detailed error messages. Enable WP_DEBUG in wp-config.php if not already enabled.
             </li>
             <li>
-                <strong>Testing with cURL</strong>
+                <strong>Testing with cURL</strong><br>
                 Use this command format to test any endpoint:<br>
                 <code style="background: #f6f7f7; padding: 4px 8px; border-radius: 3px; display: inline-block; margin-top: 8px;">
                     curl "<?php echo esc_url(home_url('/?rest_route=/{namespace}/v1/{endpoint}')); ?>"
                 </code>
             </li>
             <li>
-                <strong>Authentication for admin endpoints</strong>
+                <strong>Authentication for admin endpoints</strong><br>
                 Admin endpoints require authentication. Use X-WP-Nonce header with a valid nonce, or test from browser console while logged in.
             </li>
         </ul>
