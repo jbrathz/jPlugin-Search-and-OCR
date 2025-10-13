@@ -36,6 +36,13 @@ define('JSEARCH_AJAX_CLEAR_CACHE', 'jsearch_clear_cache');
 define('JSEARCH_NONCE_ACTION', 'jsearch_nonce');
 define('JSEARCH_REST_NAMESPACE', 'jsearch/v1');
 
+// Load translations immediately - before any hooks
+$jsearch_locale = apply_filters('plugin_locale', get_user_locale(), 'jsearch');
+$jsearch_mofile = JSEARCH_PLUGIN_DIR . 'languages/jsearch-' . $jsearch_locale . '.mo';
+if (file_exists($jsearch_mofile)) {
+    load_textdomain('jsearch', $jsearch_mofile);
+}
+
 /**
  * Plugin Activation
  */
@@ -112,25 +119,11 @@ class PDF_Search {
      * Initialize Hooks
      */
     private function init_hooks() {
-        // Load text domain
-        add_action('plugins_loaded', array($this, 'load_textdomain'));
-
         // Initialize REST API early (before rest_api_init fires)
         PDFS_REST_API::get_instance();
 
         // Initialize components
-        add_action('init', array($this, 'init_components'));
-    }
-
-    /**
-     * Load Text Domain
-     */
-    public function load_textdomain() {
-        load_plugin_textdomain(
-            'jsearch',
-            false,
-            dirname(JSEARCH_PLUGIN_BASENAME) . '/languages'
-        );
+        add_action('init', array($this, 'init_components'), 10);
     }
 
     /**

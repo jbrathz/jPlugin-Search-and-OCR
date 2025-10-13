@@ -305,10 +305,11 @@
 
             const words = query.split(/\s+/).filter(w => w.length > 0);
             let highlighted = text;
+            const highlightColor = getSettings().highlight_color || '#ffff00';
 
             words.forEach(function(word) {
                 const regex = new RegExp('(' + escapeRegex(word) + ')', 'gi');
-                highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+                highlighted = highlighted.replace(regex, '<mark style="background-color: ' + highlightColor + ';">$1</mark>');
             });
 
             return highlighted;
