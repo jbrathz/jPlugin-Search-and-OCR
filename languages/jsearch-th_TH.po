@@ -30,6 +30,9 @@ msgstr "จัดการโฟลเดอร์"
 msgid "Settings"
 msgstr "ตั้งค่า"
 
+msgid "REST API Debug"
+msgstr "ดีบัก REST API"
+
 # Dashboard
 msgid "PDF Search Dashboard"
 msgstr "แดชบอร์ด ค้นหา PDF"

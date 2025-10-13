@@ -42,7 +42,6 @@ if (isset($_POST['jsearch_save_settings']) && check_admin_referer('jsearch_setti
         PDFS_Settings::set('display.thumbnail_size', sanitize_text_field($_POST['display_thumbnail_size']));
         PDFS_Settings::set('display.snippet_length', absint($_POST['display_snippet_length']));
         PDFS_Settings::set('display.highlight_color', sanitize_hex_color($_POST['display_highlight_color']));
-        PDFS_Settings::set('display.date_format', sanitize_text_field($_POST['display_date_format']));
     } elseif ($tab === 'automation') {
         PDFS_Settings::set('automation.auto_ocr', isset($_POST['automation_auto_ocr']));
     } elseif ($tab === 'advanced') {
@@ -510,15 +509,6 @@ $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'usage'
                         </th>
                         <td>
                             <input type="text" name="display_highlight_color" id="display_highlight_color" value="<?php echo esc_attr(PDFS_Settings::get('display.highlight_color')); ?>" class="color-picker">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="display_date_format"><?php _e('Date Format', 'jsearch'); ?></label>
-                        </th>
-                        <td>
-                            <input type="text" name="display_date_format" id="display_date_format" value="<?php echo esc_attr(PDFS_Settings::get('display.date_format')); ?>" class="regular-text">
-                            <p class="description"><?php _e('PHP date format (e.g., Y-m-d H:i:s)', 'jsearch'); ?></p>
                         </td>
                     </tr>
                 </table>

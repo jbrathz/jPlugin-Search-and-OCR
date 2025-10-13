@@ -891,15 +891,15 @@ class PDFS_REST_API {
 
     /**
      * Get Snippet
-     * Extract snippet centered around first keyword match (±75 chars = 150 total)
+     * Extract snippet centered around first keyword match using configured snippet length
      */
     private static function get_snippet($content, $query = '') {
         $content = wp_strip_all_tags($content);
+        $snippet_length = PDFS_Settings::get('display.snippet_length', 200);
 
         // If no query provided, use default behavior
         if (empty($query)) {
-            $length = PDFS_Settings::get('display.snippet_length', 200);
-            return mb_strlen($content) > $length ? mb_substr($content, 0, $length) . '...' : $content;
+            return mb_strlen($content) > $snippet_length ? mb_substr($content, 0, $snippet_length) . '...' : $content;
         }
 
         // Split query into keywords (remove common words and special chars)
@@ -911,8 +911,7 @@ class PDFS_REST_API {
 
         if (empty($keywords)) {
             // Fallback to default if no valid keywords
-            $length = 150;
-            return mb_strlen($content) > $length ? mb_substr($content, 0, $length) . '...' : $content;
+            return mb_strlen($content) > $snippet_length ? mb_substr($content, 0, $snippet_length) . '...' : $content;
         }
 
         // Find first occurrence of any keyword (case-insensitive)
@@ -930,21 +929,20 @@ class PDFS_REST_API {
 
         // If no match found, return beginning of content
         if ($first_match_pos === false) {
-            $length = 150;
-            return mb_strlen($content) > $length ? mb_substr($content, 0, $length) . '...' : $content;
+            return mb_strlen($content) > $snippet_length ? mb_substr($content, 0, $snippet_length) . '...' : $content;
         }
 
-        // Extract ±75 chars around match (150 total)
-        $snippet_radius = 75;
+        // Extract snippet centered around match
+        $snippet_radius = intval($snippet_length / 2);
         $start_pos = max(0, $first_match_pos - $snippet_radius);
         $end_pos = min(mb_strlen($content), $first_match_pos + $snippet_radius);
 
-        // Adjust to ensure we get 150 chars if possible
+        // Adjust to ensure we get full snippet_length if possible
         $available_length = $end_pos - $start_pos;
-        if ($available_length < 150 && $start_pos > 0) {
-            $start_pos = max(0, $end_pos - 150);
-        } elseif ($available_length < 150 && $end_pos < mb_strlen($content)) {
-            $end_pos = min(mb_strlen($content), $start_pos + 150);
+        if ($available_length < $snippet_length && $start_pos > 0) {
+            $start_pos = max(0, $end_pos - $snippet_length);
+        } elseif ($available_length < $snippet_length && $end_pos < mb_strlen($content)) {
+            $end_pos = min(mb_strlen($content), $start_pos + $snippet_length);
         }
 
         $snippet = mb_substr($content, $start_pos, $end_pos - $start_pos);
