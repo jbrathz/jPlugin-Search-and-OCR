@@ -90,7 +90,7 @@ $placeholder_text = $placeholder_text !== '' ? $placeholder_text : __('Type keyw
     <a href="{{post_url}}" {{#link_rel}}rel="{{link_rel}}"{{/link_rel}} target="{{link_target}}" class="jsearch-result-item">
         {{#post_thumbnail}}
         <div class="result-thumbnail">
-            <img src="{{post_thumbnail}}" alt="{{post_title}}">
+            <img src="{{post_thumbnail}}" alt="{{post_title_plain}}">
         </div>
         {{/post_thumbnail}}
         <div class="result-content">
