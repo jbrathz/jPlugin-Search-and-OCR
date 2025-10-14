@@ -258,6 +258,10 @@ class PDFS_Database {
             }
         }
 
+        // Get searchable post types from settings (validated and secure)
+        $post_types = PDFS_Settings::get_searchable_post_types();
+        $post_types_placeholders = implode(',', array_fill(0, count($post_types), '%s'));
+
         // WordPress posts search
         $posts_sql = $wpdb->prepare(
             "SELECT
@@ -274,13 +278,14 @@ class PDFS_Database {
                 0 AS relevance
             FROM {$wpdb->posts}
             WHERE post_status = 'publish'
-            AND post_type IN ('post', 'page')
+            AND post_type IN ({$post_types_placeholders})
             AND (post_title LIKE %s OR post_content LIKE %s)
             AND ID NOT IN (SELECT DISTINCT post_id FROM {$table} WHERE post_id IS NOT NULL){$exclude_where}",
-            home_url('/'),
-            home_url('/'),
-            $search_like,
-            $search_like
+            array_merge(
+                array(home_url('/'), home_url('/')),
+                $post_types,
+                array($search_like, $search_like)
+            )
         );
 
         // Combine and execute
@@ -347,18 +352,21 @@ class PDFS_Database {
             }
         }
 
+        // Get searchable post types from settings (validated and secure)
+        $post_types = PDFS_Settings::get_searchable_post_types();
+        $post_types_placeholders = implode(',', array_fill(0, count($post_types), '%s'));
+
         // Posts count (exclude those linked to PDFs)
         $posts_count_sql = $wpdb->prepare(
             "SELECT COUNT(*)
              FROM {$wpdb->posts}
              WHERE post_status = 'publish'
-             AND post_type IN ('post', 'page')
+             AND post_type IN ({$post_types_placeholders})
              AND (post_title LIKE %s OR post_content LIKE %s)
              AND ID NOT IN (
                 SELECT DISTINCT post_id FROM {$table} WHERE post_id IS NOT NULL
              ){$exclude_where}",
-            $search_like,
-            $search_like
+            array_merge($post_types, array($search_like, $search_like))
         );
 
         $posts_count = (int) $wpdb->get_var($posts_count_sql);
@@ -403,6 +411,14 @@ class PDFS_Database {
         if (!empty($args['folder_id'])) {
             $where .= " AND t.folder_id = %s";
             $where_params[] = sanitize_text_field($args['folder_id']);
+        }
+
+        // Filter by searchable post types
+        $post_types = PDFS_Settings::get_searchable_post_types();
+        if (!empty($post_types)) {
+            $post_types_placeholders = implode(',', array_fill(0, count($post_types), '%s'));
+            $where .= " AND p.post_type IN ({$post_types_placeholders})";
+            $where_params = array_merge($where_params, $post_types);
         }
 
         $sql = $wpdb->prepare(
@@ -457,6 +473,14 @@ class PDFS_Database {
             $where_params[] = sanitize_text_field($args['folder_id']);
         }
 
+        // Filter by searchable post types
+        $post_types = PDFS_Settings::get_searchable_post_types();
+        if (!empty($post_types)) {
+            $post_types_placeholders = implode(',', array_fill(0, count($post_types), '%s'));
+            $where .= " AND p.post_type IN ({$post_types_placeholders})";
+            $where_params = array_merge($where_params, $post_types);
+        }
+
         $sql = $wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} t
              LEFT JOIN {$wpdb->posts} p ON t.post_id = p.ID
@@ -492,13 +516,28 @@ class PDFS_Database {
 
         $search_like = '%' . $wpdb->esc_like($query) . '%';
 
+        // Get searchable post types from settings (validated and secure)
+        $post_types = PDFS_Settings::get_searchable_post_types();
+        $post_types_placeholders = '';
+        if (!empty($post_types)) {
+            $post_types_placeholders = implode(',', array_fill(0, count($post_types), '%s'));
+        }
+
         // Folder filter
         $folder_where = '';
         if (!empty($args['folder_id'])) {
-            $folder_where = $wpdb->prepare(" AND folder_id = %s", sanitize_text_field($args['folder_id']));
+            $folder_where = $wpdb->prepare(" AND t.folder_id = %s", sanitize_text_field($args['folder_id']));
         }
 
         // PDF search - only those with associated posts (for frontend)
+        $pdf_where = "(t.pdf_title LIKE %s OR t.post_title LIKE %s OR t.content LIKE %s) AND t.post_id IS NOT NULL AND t.post_id > 0" . $folder_where;
+        $pdf_params = array($search_like, $search_like, $search_like);
+
+        if (!empty($post_types)) {
+            $pdf_where .= " AND p.post_type IN ({$post_types_placeholders})";
+            $pdf_params = array_merge($pdf_params, $post_types);
+        }
+
         $pdf_sql = $wpdb->prepare(
             "SELECT
                 CASE
@@ -517,11 +556,8 @@ class PDFS_Database {
                 0 AS relevance
             FROM {$table} t
             LEFT JOIN {$wpdb->posts} p ON t.post_id = p.ID
-            WHERE (t.pdf_title LIKE %s OR t.post_title LIKE %s OR t.content LIKE %s)
-            AND t.post_id IS NOT NULL AND t.post_id > 0{$folder_where}",
-            $search_like,
-            $search_like,
-            $search_like
+            WHERE {$pdf_where}",
+            $pdf_params
         );
 
         // Get excluded pages
@@ -536,29 +572,33 @@ class PDFS_Database {
         }
 
         // WordPress posts search
-        $posts_sql = $wpdb->prepare(
-            "SELECT
-                'post' as source_type,
-                ID as id,
-                ID as post_id,
-                NULL as file_id,
-                post_title COLLATE utf8mb4_unicode_ci as post_title,
-                CONCAT(%s, '?p=', ID) COLLATE utf8mb4_unicode_ci as post_url,
-                post_title COLLATE utf8mb4_unicode_ci as title,
-                CONCAT(%s, '?p=', ID) COLLATE utf8mb4_unicode_ci as url,
-                post_content COLLATE utf8mb4_unicode_ci as content,
-                post_date as post_date,
-                0 AS relevance
-            FROM {$wpdb->posts}
-            WHERE post_status = 'publish'
-            AND post_type IN ('post', 'page')
-            AND (post_title LIKE %s OR post_content LIKE %s)
-            AND ID NOT IN (SELECT DISTINCT post_id FROM {$table} WHERE post_id IS NOT NULL){$exclude_where}",
-            home_url('/'),
-            home_url('/'),
-            $search_like,
-            $search_like
-        );
+        $posts_sql = "SELECT NULL as source_type, NULL as id, NULL as post_id, NULL as file_id, NULL as post_title, NULL as post_url, NULL as title, NULL as url, NULL as content, NULL as post_date, NULL as relevance FROM DUAL WHERE 1=0"; // Empty result with correct columns
+        if (!empty($post_types)) {
+            $posts_sql = $wpdb->prepare(
+                "SELECT
+                    'post' as source_type,
+                    ID as id,
+                    ID as post_id,
+                    NULL as file_id,
+                    post_title COLLATE utf8mb4_unicode_ci as post_title,
+                    CONCAT(%s, '?p=', ID) COLLATE utf8mb4_unicode_ci as post_url,
+                    post_title COLLATE utf8mb4_unicode_ci as title,
+                    CONCAT(%s, '?p=', ID) COLLATE utf8mb4_unicode_ci as url,
+                    post_content COLLATE utf8mb4_unicode_ci as content,
+                    post_date as post_date,
+                    0 AS relevance
+                FROM {$wpdb->posts}
+                WHERE post_status = 'publish'
+                AND post_type IN ({$post_types_placeholders})
+                AND (post_title LIKE %s OR post_content LIKE %s)
+                AND ID NOT IN (SELECT DISTINCT post_id FROM {$table} WHERE post_id IS NOT NULL){$exclude_where}",
+                array_merge(
+                    array(home_url('/'), home_url('/')),
+                    $post_types,
+                    array($search_like, $search_like)
+                )
+            );
+        }
 
         // Combine and execute
         $sql = "
@@ -595,21 +635,34 @@ class PDFS_Database {
 
         $search_like = '%' . $wpdb->esc_like($query) . '%';
 
+        // Get searchable post types from settings (validated and secure)
+        $post_types = PDFS_Settings::get_searchable_post_types();
+        $post_types_placeholders = '';
+        if (!empty($post_types)) {
+            $post_types_placeholders = implode(',', array_fill(0, count($post_types), '%s'));
+        }
+
         // Folder filter for PDF table
         $folder_where = '';
         if (!empty($args['folder_id'])) {
-            $folder_where = $wpdb->prepare(" AND folder_id = %s", sanitize_text_field($args['folder_id']));
+            $folder_where = $wpdb->prepare(" AND t.folder_id = %s", sanitize_text_field($args['folder_id']));
         }
 
         // Count PDFs - only those with associated posts (for frontend)
+        $pdf_where = "(t.pdf_title LIKE %s OR t.post_title LIKE %s OR t.content LIKE %s) AND t.post_id IS NOT NULL AND t.post_id > 0" . $folder_where;
+        $pdf_params = array($search_like, $search_like, $search_like);
+
+        if (!empty($post_types)) {
+            $pdf_where .= " AND p.post_type IN ({$post_types_placeholders})";
+            $pdf_params = array_merge($pdf_params, $post_types);
+        }
+
         $pdf_count_sql = $wpdb->prepare(
             "SELECT COUNT(*)
-             FROM {$table}
-             WHERE (pdf_title LIKE %s OR post_title LIKE %s OR content LIKE %s)
-             AND post_id IS NOT NULL AND post_id > 0{$folder_where}",
-            $search_like,
-            $search_like,
-            $search_like
+             FROM {$table} t
+             LEFT JOIN {$wpdb->posts} p ON t.post_id = p.ID
+             WHERE {$pdf_where}",
+            $pdf_params
         );
 
         $pdf_count = (int) $wpdb->get_var($pdf_count_sql);
@@ -626,20 +679,21 @@ class PDFS_Database {
         }
 
         // Posts count (exclude those linked to PDFs)
-        $posts_count_sql = $wpdb->prepare(
-            "SELECT COUNT(*)
-             FROM {$wpdb->posts}
-             WHERE post_status = 'publish'
-             AND post_type IN ('post', 'page')
-             AND (post_title LIKE %s OR post_content LIKE %s)
-             AND ID NOT IN (
-                SELECT DISTINCT post_id FROM {$table} WHERE post_id IS NOT NULL
-             ){$exclude_where}",
-            $search_like,
-            $search_like
-        );
-
-        $posts_count = (int) $wpdb->get_var($posts_count_sql);
+        $posts_count = 0;
+        if (!empty($post_types)) {
+            $posts_count_sql = $wpdb->prepare(
+                "SELECT COUNT(*)
+                 FROM {$wpdb->posts}
+                 WHERE post_status = 'publish'
+                 AND post_type IN ({$post_types_placeholders})
+                 AND (post_title LIKE %s OR post_content LIKE %s)
+                 AND ID NOT IN (
+                    SELECT DISTINCT post_id FROM {$table} WHERE post_id IS NOT NULL
+                 ){$exclude_where}",
+                array_merge($post_types, array($search_like, $search_like))
+            );
+            $posts_count = (int) $wpdb->get_var($posts_count_sql);
+        }
 
         return $pdf_count + $posts_count;
     }

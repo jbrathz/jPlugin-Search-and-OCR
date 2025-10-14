@@ -37,6 +37,12 @@ if (isset($_POST['jsearch_save_settings']) && check_admin_referer('jsearch_setti
             ? array_map('absint', $_POST['search_exclude_pages'])
             : array();
         PDFS_Settings::set('search.exclude_pages', $exclude_pages);
+
+        // Save searchable post types
+        $post_types = isset($_POST['search_post_types']) && is_array($_POST['search_post_types'])
+            ? array_map('sanitize_key', $_POST['search_post_types'])
+            : array('post', 'page');
+        PDFS_Settings::set('search.post_types', $post_types);
     } elseif ($tab === 'display') {
         PDFS_Settings::set('display.show_thumbnail', isset($_POST['display_show_thumbnail']));
         PDFS_Settings::set('display.thumbnail_size', sanitize_text_field($_POST['display_thumbnail_size']));
@@ -449,6 +455,30 @@ $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'usage'
                                 <?php endforeach; ?>
                             </select>
                             <p class="description"><?php _e('Select pages to exclude from search results (hold Ctrl/Cmd to select multiple)', 'jsearch'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label><?php _e('Searchable Post Types', 'jsearch'); ?></label>
+                        </th>
+                        <td>
+                            <?php
+                            $saved_post_types = PDFS_Settings::get('search.post_types', array('post', 'page'));
+                            $registered_post_types = get_post_types(array('public' => true), 'objects');
+
+                            // Remove 'attachment' - it's handled separately via PDF index
+                            unset($registered_post_types['attachment']);
+                            ?>
+                            <fieldset>
+                                <?php foreach ($registered_post_types as $post_type): ?>
+                                    <label style="display: block; margin-bottom: 8px;">
+                                        <input type="checkbox" name="search_post_types[]" value="<?php echo esc_attr($post_type->name); ?>" <?php echo in_array($post_type->name, $saved_post_types) ? 'checked' : ''; ?>>
+                                        <strong><?php echo esc_html($post_type->label); ?></strong>
+                                        <span style="color: #666;">(<?php echo esc_html($post_type->name); ?>)</span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </fieldset>
+                            <p class="description"><?php _e('Select which post types to include in search results. Only registered public post types are shown.', 'jsearch'); ?></p>
                         </td>
                     </tr>
                 </table>

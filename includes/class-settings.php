@@ -136,6 +136,7 @@ class PDFS_Settings {
                 'open_new_tab' => true,
                 'cache_duration' => 60,
                 'exclude_pages' => array(),
+                'post_types' => array('post', 'page'),
             ),
             'display' => array(
                 'show_thumbnail' => true,
@@ -316,5 +317,43 @@ class PDFS_Settings {
 
         $parts = explode('|', $decoded);
         return $parts[0] ?? $decoded;
+    }
+
+    /**
+     * Get searchable post types (safe and validated)
+     *
+     * Returns post types that should be included in global search.
+     * Validates against registered post types for security.
+     *
+     * @return array Array of post type slugs
+     */
+    public static function get_searchable_post_types() {
+        // Get saved post types from settings
+        $saved_types = self::get('search.post_types', array('post', 'page'));
+
+        // Ensure it's an array
+        if (!is_array($saved_types)) {
+            $saved_types = array('post', 'page');
+        }
+
+        // Get all registered public post types
+        $registered_types = get_post_types(array('public' => true), 'names');
+
+        // Filter out invalid post types for security
+        $valid_types = array();
+        foreach ($saved_types as $type) {
+            $sanitized = sanitize_key($type);
+            // Exclude 'attachment' - it's handled separately via PDF index table
+            if (isset($registered_types[$sanitized]) && $sanitized !== 'attachment') {
+                $valid_types[] = $sanitized;
+            }
+        }
+
+        // Fallback to post and page if empty
+        if (empty($valid_types)) {
+            $valid_types = array('post', 'page');
+        }
+
+        return $valid_types;
     }
 }
