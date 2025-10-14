@@ -79,10 +79,34 @@ class PDFS_PDF_Parser {
             );
         }
 
+        // Check file size limit (10MB for safety)
+        $file_size = filesize($file_path);
+        $max_size = 10 * 1024 * 1024; // 10MB in bytes
+
+        if ($file_size > $max_size) {
+            PDFS_Logger::warning('PDF file too large for parser', array(
+                'filename' => $filename,
+                'file_size' => $file_size,
+                'file_size_mb' => round($file_size / 1024 / 1024, 2),
+                'max_size_mb' => 10,
+            ));
+
+            return new WP_Error(
+                'file_too_large',
+                sprintf(__('PDF file too large for built-in parser (max 10MB, file is %.2f MB): %s', 'jsearch'), round($file_size / 1024 / 1024, 2), $filename),
+                array('status' => 413)
+            );
+        }
+
         PDFS_Logger::debug('Starting PDF text extraction', array(
             'filename' => $filename,
-            'file_size' => filesize($file_path),
+            'file_size' => $file_size,
+            'file_size_mb' => round($file_size / 1024 / 1024, 2),
         ));
+
+        // Set timeout and memory limits for parsing
+        @set_time_limit(120); // 2 minutes per file
+        @ini_set('memory_limit', '512M');
 
         try {
             // Parse PDF
