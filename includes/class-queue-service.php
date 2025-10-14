@@ -424,96 +424,114 @@ class PDFS_Queue_Service {
         $folder = PDFS_Folders::get_by_folder_id($job->folder_id);
 
         foreach ($file_ids as $file_id) {
-            // ข้ามไฟล์ที่ process แล้ว
-            if (self::is_file_processed($file_id)) {
-                $skipped_count++;
-                $results[] = array(
-                    'file_id' => $file_id,
-                    'status' => 'skipped',
-                    'message' => 'Already processed',
-                );
-                continue;
-            }
+            // Wrap each file processing in try-catch to prevent batch crash
+            try {
+                // ข้ามไฟล์ที่ process แล้ว
+                if (self::is_file_processed($file_id)) {
+                    $skipped_count++;
+                    $results[] = array(
+                        'file_id' => $file_id,
+                        'status' => 'skipped',
+                        'message' => 'Already processed',
+                    );
+                    continue;
+                }
 
-            // OCR file
-            $result = $ocr_service->ocr_file($file_id);
+                // OCR file
+                $result = $ocr_service->ocr_file($file_id);
 
-            if (is_wp_error($result)) {
-                $error_count++;
-                $results[] = array(
-                    'file_id' => $file_id,
-                    'status' => 'error',
-                    'message' => $result->get_error_message(),
-                );
+                if (is_wp_error($result)) {
+                    $error_count++;
+                    $results[] = array(
+                        'file_id' => $file_id,
+                        'status' => 'error',
+                        'message' => $result->get_error_message(),
+                    );
 
-                PDFS_Logger::error('Batch OCR failed', array(
-                    'batch_id' => $batch_id,
-                    'file_id' => $file_id,
-                    'error' => $result->get_error_message(),
-                ));
-            } else {
-                if (isset($result['result'])) {
-                    // Add folder info
-                    if ($folder) {
-                        $result['result']['folder_id'] = $folder->folder_id;
-                        $result['result']['folder_name'] = $folder->folder_name;
-                    }
+                    PDFS_Logger::error('Batch OCR failed', array(
+                        'batch_id' => $batch_id,
+                        'file_id' => $file_id,
+                        'error' => $result->get_error_message(),
+                    ));
+                } else {
+                    if (isset($result['result'])) {
+                        // Add folder info
+                        if ($folder) {
+                            $result['result']['folder_id'] = $folder->folder_id;
+                            $result['result']['folder_name'] = $folder->folder_name;
+                        }
 
-                    // ค้นหา post_id ที่มี Google Drive URL (เหมือน Manual Single File)
-                    $post_id = null;
-                    if (isset($result['result']['file_id'])) {
-                        $post_id = PDFS_REST_API::find_post_by_file_id($result['result']['file_id']);
+                        // ค้นหา post_id ที่มี Google Drive URL (เหมือน Manual Single File)
+                        $post_id = null;
+                        if (isset($result['result']['file_id'])) {
+                            $post_id = PDFS_REST_API::find_post_by_file_id($result['result']['file_id']);
 
-                        if ($post_id) {
-                            PDFS_Logger::info('Batch OCR: Matched post_id', array(
-                                'file_id' => $result['result']['file_id'],
+                            if ($post_id) {
+                                PDFS_Logger::info('Batch OCR: Matched post_id', array(
+                                    'file_id' => $result['result']['file_id'],
+                                    'post_id' => $post_id,
+                                ));
+                            } else {
+                                PDFS_Logger::info('Batch OCR: No post_id match', array(
+                                    'file_id' => $result['result']['file_id'],
+                                ));
+                            }
+                        }
+
+                        // Save to database (with post_id if found)
+                        $saved = $post_id
+                            ? $ocr_service->save_result($result['result'], $post_id)
+                            : $ocr_service->save_result($result['result']);
+
+                        if ($saved) {
+                            $success_count++;
+                            $results[] = array(
+                                'file_id' => $file_id,
+                                'status' => 'success',
+                                'file_name' => $result['result']['file_name'],
+                                'char_count' => $result['result']['char_count'],
+                                'ocr_method' => $result['result']['ocr_method'],
+                                'post_id' => $post_id, // เพิ่ม post_id เพื่อ verify
+                            );
+
+                            PDFS_Logger::info('Batch OCR success', array(
+                                'batch_id' => $batch_id,
+                                'file_id' => $file_id,
                                 'post_id' => $post_id,
+                                'chars' => $result['result']['char_count'],
                             ));
                         } else {
-                            PDFS_Logger::info('Batch OCR: No post_id match', array(
-                                'file_id' => $result['result']['file_id'],
-                            ));
+                            $error_count++;
+                            $results[] = array(
+                                'file_id' => $file_id,
+                                'status' => 'error',
+                                'message' => 'Failed to save to database',
+                            );
                         }
-                    }
-
-                    // Save to database (with post_id if found)
-                    $saved = $post_id
-                        ? $ocr_service->save_result($result['result'], $post_id)
-                        : $ocr_service->save_result($result['result']);
-
-                    if ($saved) {
-                        $success_count++;
-                        $results[] = array(
-                            'file_id' => $file_id,
-                            'status' => 'success',
-                            'file_name' => $result['result']['file_name'],
-                            'char_count' => $result['result']['char_count'],
-                            'ocr_method' => $result['result']['ocr_method'],
-                            'post_id' => $post_id, // เพิ่ม post_id เพื่อ verify
-                        );
-
-                        PDFS_Logger::info('Batch OCR success', array(
-                            'batch_id' => $batch_id,
-                            'file_id' => $file_id,
-                            'post_id' => $post_id,
-                            'chars' => $result['result']['char_count'],
-                        ));
                     } else {
                         $error_count++;
                         $results[] = array(
                             'file_id' => $file_id,
                             'status' => 'error',
-                            'message' => 'Failed to save to database',
+                            'message' => 'Invalid API response',
                         );
                     }
-                } else {
-                    $error_count++;
-                    $results[] = array(
-                        'file_id' => $file_id,
-                        'status' => 'error',
-                        'message' => 'Invalid API response',
-                    );
                 }
+            } catch (\Exception $e) {
+                // Catch any unexpected errors to prevent batch crash
+                $error_count++;
+                $results[] = array(
+                    'file_id' => $file_id,
+                    'status' => 'error',
+                    'message' => 'Unexpected error: ' . $e->getMessage(),
+                );
+
+                PDFS_Logger::error('Batch processing crashed', array(
+                    'batch_id' => $batch_id,
+                    'file_id' => $file_id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ));
             }
         }
 
@@ -860,101 +878,119 @@ class PDFS_Queue_Service {
         $error_count = 0;
 
         foreach ($attachment_ids as $attachment_id) {
-            $media_file_id = 'media_' . $attachment_id;
+            // Wrap each file processing in try-catch to prevent batch crash
+            try {
+                $media_file_id = 'media_' . $attachment_id;
 
-            // ข้ามไฟล์ที่ process แล้ว
-            if (self::is_file_processed($media_file_id)) {
-                $skipped_count++;
-                $results[] = array(
-                    'attachment_id' => $attachment_id,
-                    'status' => 'skipped',
-                    'message' => 'Already processed',
-                );
-                continue;
-            }
-
-            // ดึง file path
-            $file_path = get_attached_file($attachment_id);
-            if (!$file_path || !file_exists($file_path)) {
-                $error_count++;
-                $results[] = array(
-                    'attachment_id' => $attachment_id,
-                    'status' => 'error',
-                    'message' => 'File not found',
-                );
-                PDFS_Logger::error('Media file not found', array(
-                    'batch_id' => $batch_id,
-                    'attachment_id' => $attachment_id,
-                ));
-                continue;
-            }
-
-            // ดึง filename
-            $filename = basename($file_path);
-
-            // เช็ค processing method
-            $processing_method = PDFS_Settings::get('processing.wordpress_media_method', 'parser');
-
-            if ($processing_method === 'parser') {
-                // ใช้ Built-in Parser
-                $parser = new PDFS_PDF_Parser();
-                $result = $parser->extract_text($file_path, $filename);
-            } else {
-                // ใช้ OCR API (default)
-                $result = $ocr_service->ocr_file_upload($file_path, $filename);
-            }
-
-            if (is_wp_error($result)) {
-                $error_count++;
-                $results[] = array(
-                    'attachment_id' => $attachment_id,
-                    'status' => 'error',
-                    'message' => $result->get_error_message(),
-                );
-
-                PDFS_Logger::error('Media batch OCR failed', array(
-                    'batch_id' => $batch_id,
-                    'attachment_id' => $attachment_id,
-                    'error' => $result->get_error_message(),
-                ));
-            } else {
-                // Debug: Log API response structure
-                PDFS_Logger::debug('Media OCR API response', array(
-                    'attachment_id' => $attachment_id,
-                    'has_content' => isset($result['content']),
-                    'response_keys' => array_keys($result),
-                    'content_length' => isset($result['content']) ? strlen($result['content']) : 0,
-                ));
-
-                // Save to database (ไม่ต้องเช็ค ['result'] เพราะ ocr_file_upload return ข้อมูลโดยตรง)
-                // ค้นหา post_id ที่แนบไฟล์นี้
-                $parent_post_id = wp_get_post_parent_id($attachment_id);
-                $post_id_to_save = $parent_post_id > 0 ? $parent_post_id : null;
-
-                $saved = $ocr_service->save_media_result($result, $attachment_id, $post_id_to_save);
-                if ($saved) {
-                    $success_count++;
+                // ข้ามไฟล์ที่ process แล้ว
+                if (self::is_file_processed($media_file_id)) {
+                    $skipped_count++;
                     $results[] = array(
                         'attachment_id' => $attachment_id,
-                        'status' => 'success',
-                        'file_name' => $filename,
-                        'char_count' => $result['char_count'] ?? strlen($result['content']),
-                        'ocr_method' => $result['ocr_method'] ?? null,
+                        'status' => 'skipped',
+                        'message' => 'Already processed',
                     );
+                    continue;
+                }
 
-                    PDFS_Logger::info('Media batch OCR success', array(
-                        'batch_id' => $batch_id,
-                        'attachment_id' => $attachment_id,
-                        'chars' => $result['char_count'] ?? 0,
-                    ));
-                } else {
+                // ดึง file path
+                $file_path = get_attached_file($attachment_id);
+                if (!$file_path || !file_exists($file_path)) {
                     $error_count++;
                     $results[] = array(
                         'attachment_id' => $attachment_id,
                         'status' => 'error',
-                        'message' => 'Failed to save to database',
+                        'message' => 'File not found',
                     );
+                    PDFS_Logger::error('Media file not found', array(
+                        'batch_id' => $batch_id,
+                        'attachment_id' => $attachment_id,
+                    ));
+                    continue;
                 }
+
+                // ดึง filename
+                $filename = basename($file_path);
+
+                // เช็ค processing method
+                $processing_method = PDFS_Settings::get('processing.wordpress_media_method', 'parser');
+
+                if ($processing_method === 'parser') {
+                    // ใช้ Built-in Parser
+                    $parser = new PDFS_PDF_Parser();
+                    $result = $parser->extract_text($file_path, $filename);
+                } else {
+                    // ใช้ OCR API (default)
+                    $result = $ocr_service->ocr_file_upload($file_path, $filename);
+                }
+
+                if (is_wp_error($result)) {
+                    $error_count++;
+                    $results[] = array(
+                        'attachment_id' => $attachment_id,
+                        'status' => 'error',
+                        'message' => $result->get_error_message(),
+                    );
+
+                    PDFS_Logger::error('Media batch OCR failed', array(
+                        'batch_id' => $batch_id,
+                        'attachment_id' => $attachment_id,
+                        'error' => $result->get_error_message(),
+                    ));
+                } else {
+                    // Debug: Log API response structure
+                    PDFS_Logger::debug('Media OCR API response', array(
+                        'attachment_id' => $attachment_id,
+                        'has_content' => isset($result['content']),
+                        'response_keys' => array_keys($result),
+                        'content_length' => isset($result['content']) ? strlen($result['content']) : 0,
+                    ));
+
+                    // Save to database (ไม่ต้องเช็ค ['result'] เพราะ ocr_file_upload return ข้อมูลโดยตรง)
+                    // ค้นหา post_id ที่แนบไฟล์นี้
+                    $parent_post_id = wp_get_post_parent_id($attachment_id);
+                    $post_id_to_save = $parent_post_id > 0 ? $parent_post_id : null;
+
+                    $saved = $ocr_service->save_media_result($result, $attachment_id, $post_id_to_save);
+                    if ($saved) {
+                        $success_count++;
+                        $results[] = array(
+                            'attachment_id' => $attachment_id,
+                            'status' => 'success',
+                            'file_name' => $filename,
+                            'char_count' => $result['char_count'] ?? strlen($result['content']),
+                            'ocr_method' => $result['ocr_method'] ?? null,
+                        );
+
+                        PDFS_Logger::info('Media batch OCR success', array(
+                            'batch_id' => $batch_id,
+                            'attachment_id' => $attachment_id,
+                            'chars' => $result['char_count'] ?? 0,
+                        ));
+                    } else {
+                        $error_count++;
+                        $results[] = array(
+                            'attachment_id' => $attachment_id,
+                            'status' => 'error',
+                            'message' => 'Failed to save to database',
+                        );
+                    }
+                }
+            } catch (\Exception $e) {
+                // Catch any unexpected errors to prevent batch crash
+                $error_count++;
+                $results[] = array(
+                    'attachment_id' => $attachment_id,
+                    'status' => 'error',
+                    'message' => 'Unexpected error: ' . $e->getMessage(),
+                );
+
+                PDFS_Logger::error('Media batch processing crashed', array(
+                    'batch_id' => $batch_id,
+                    'attachment_id' => $attachment_id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ));
             }
         }
 
