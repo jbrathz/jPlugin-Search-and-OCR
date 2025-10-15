@@ -146,6 +146,8 @@ class PDFS_Activator {
                 'placeholder_text' => 'Type keywords to search...',
                 'open_new_tab' => true,
                 'cache_duration' => 60, // minutes
+                'exclude_pages' => array(),
+                'post_types' => array('post', 'page'),
             ),
 
             // Display Settings
