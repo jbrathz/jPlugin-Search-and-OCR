@@ -10,9 +10,11 @@
 
 ## รายละเอียดเวอร์ชั่น
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#)
+### 1.1.0
+- **เพิ่มการตั้งค่าประเภทโพสต์ที่ค้นหาได้ (Searchable Post Types)**: ผู้ดูแลระบบสามารถเลือกประเภทของเนื้อหา (เช่น โพสต์, หน้า, หรือ custom post types) ที่จะให้แสดงในผลการค้นหาได้
+- **ปรับปรุงการประมวลผลไฟล์ PDF ขนาดใหญ่ (Built-in PDF Parser Method)**: ป้องกันข้อผิดพลาดระหว่างการประมวลผลเป็นชุด
 
-### คุณสมบัติหลัก
+### 1.0.0
 - รองรับ **Built-in PDF Parser** ([Smalot/PdfParser v2.9.0](https://github.com/smalot/pdfparser))
 - รองรับ 3 ช่องทาง (Google Drive File, Google Drive Folder, WordPress Media)
 - ค้นหาแบบ global (รวมบทความและหน้าเพจทั้งหมด)
